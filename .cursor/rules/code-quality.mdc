@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- You always run all code quality checks defined by [README.md](mdc:README.md) with the specification in the [pyproject.toml](mdc:pyproject.toml) file after generating a suggestion or finishing up an implementation.
+- You always test your code, if applicable (no need for testing frameworks or internal library functionalities).
+
+- You write tests only in the tests directory, with a mirror structure to the src package.

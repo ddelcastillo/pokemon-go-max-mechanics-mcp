@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- You always use bare asterisk for functions where applicable.
+- You write explicit arguments and class attributes where possible.
+- You always document functions and classes using Google style documentation.
+- You don't write documentation / docstring at the top of files or in __init__.py files.
+- You don't write code in init files, you don't write "__all__" imports or any imports in init files.
+- You always write absolute imports, never relative imports.
+- You follow hexagonal architecture. You write core interfaces and abstract implementations, as well as constants and entities, in the domain directory. You write concrete implementations in the infrastructure directory. The application directory will contain the application use cases. Remember: domain only knows domain; infrastructure only knows infrastructure and domain; and application only knows application and domain.
+
+- You follow the ports & adapters pattern, writing abstract ports in the domain directory, separating based on if they're "inbound" or "outbound" ports, with their equivalent infrastructure "inbound" or "outbound" adapters.

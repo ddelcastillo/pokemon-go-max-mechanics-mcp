@@ -1,0 +1,105 @@
+[tool.poetry]
+name = "pokemon-go-max-mechanics"
+version = "0.1.0"
+description = "Pokémon Go project related to Max mechanics."
+authors = ["Daniel del Castillo <fwd.ddca@pm.me>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    { include = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.13"
+httpx = ">=0.28.1, <1.0.0"
+injector = ">=0.22.0, <1.0.0"
+pillow = ">=10.0.0, <11.0.0"
+
+[tool.poetry.group.code-quality]
+optional = true
+[tool.poetry.group.code-quality.dependencies]
+mypy = "^1.16.0"
+ruff = ">=0.11.13, <1.0.0"
+isort = "^6.0.1"
+
+[tool.poetry.group.test]
+optional = true
+[tool.poetry.group.test.dependencies]
+pytest = "^8.4.0"
+pytest-asyncio = "^0.23.0"
+
+[tool.poetry.group.psycopg2-binary]
+optional = true
+[tool.poetry.group.psycopg2-binary.dependencies]
+psycopg2-binary = "^2.9.10"
+
+[tool.poetry.group.psycopg2]
+optional = true
+[tool.poetry.group.psycopg2.dependencies]
+psycopg2 = "^2.9.10"
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.13"
+allow_redefinition = true
+disallow_untyped_defs = true
+disallow_untyped_calls = true
+show_column_numbers = true
+ignore_missing_imports = true
+exclude = ''' 
+/(
+  | .venv/
+  | venv/
+)/
+'''
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]
+testpaths = [
+    "tests"
+]
+
+[tool.ruff]
+line-length = 119
+target-version = "py313"
+
+[tool.ruff.format]
+docstring-code-format = false
+indent-style = "space"
+line-ending = "lf"
+quote-style = "double"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "D",   # pydocstyle
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "S",   # flake8-bandit (security)
+    "ANN", # flake8-annotations
+    "SIM", # flake8-simplify
+    "TCH", # type-checking
+    "RUF", # Ruff-specific rules
+]
+ignore = ["E203", "D203", "D100", "D101", "D104"]
+exclude = [
+    "tests/**/*",
+    ".venv",
+    "venv",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
