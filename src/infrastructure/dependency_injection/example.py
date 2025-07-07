@@ -2,7 +2,7 @@
 
 from injector import inject
 
-from src.constants.api_constants import POKEMON_GO_API_BASE_URL
+from src.application.constants.api_constants import POKEMON_GO_API_BASE_URL
 from src.domain.ports.outbound.http_client_port import HttpClientPort
 from src.infrastructure.dependency_injection.setup import injector
 

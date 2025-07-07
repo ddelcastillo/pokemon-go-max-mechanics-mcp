@@ -1,28 +1,25 @@
 """Main menu view for the application."""
 
-import tkinter as tk
+from tkinter.ttk import Button, Frame, Label, Widget
 from typing import Final
 
+from src.application.constants.ui_constants import BUTTON_WIDTH, TITLE_FONT
+from src.application.constants.view_constants import POKEDEX_VIEW
 from src.application.views.base_view import BaseView, ViewNavigator
 
 
 class MainMenuView(BaseView):
     """Main menu view with navigation options."""
 
-    # UI Configuration constants
-    TITLE_TEXT: Final[str] = "Pokémon Go Max Mechanics"
-    TITLE_FONT: Final[tuple[str, int, str]] = ("Arial", 24, "bold")
-    TITLE_COLOR: Final[str] = "#1f4e79"
-
+    # Application-specific text constants
+    TITLE_TEXT: Final[str] = "Max Mechanics"
     SUBTITLE_TEXT: Final[str] = "Choose an option to explore:"
-    SUBTITLE_FONT: Final[tuple[str, int]] = ("Arial", 14)
-    SUBTITLE_COLOR: Final[str] = "#666666"
 
-    BUTTON_FONT: Final[tuple[str, int, str]] = ("Arial", 12, "bold")
-    BUTTON_WIDTH: Final[int] = 20
-    BUTTON_HEIGHT: Final[int] = 2
+    POKEDEX_BUTTON_TEXT: Final[str] = "📚 Pokédex API"
+    TEAM_BUILDER_BUTTON_TEXT: Final[str] = "👥 G-Max Tank Analysis"
+    MAX_MECHANICS_BUTTON_TEXT: Final[str] = "⚡ G-Max Best Attacker"
 
-    def __init__(self, *, parent: tk.Widget, navigator: ViewNavigator) -> None:
+    def __init__(self, *, parent: Widget, navigator: ViewNavigator) -> None:
         """Initialize the main menu view.
 
         Args:
@@ -37,66 +34,38 @@ class MainMenuView(BaseView):
             return
 
         # Title
-        title_label = tk.Label(self.frame, text=self.TITLE_TEXT, font=self.TITLE_FONT, fg=self.TITLE_COLOR, bg="white")
+        title_label = Label(self.frame, text=self.TITLE_TEXT, font=TITLE_FONT)
         title_label.pack(pady=(40, 20))
 
         # Subtitle
-        subtitle_label = tk.Label(
-            self.frame, text=self.SUBTITLE_TEXT, font=self.SUBTITLE_FONT, fg=self.SUBTITLE_COLOR, bg="white"
-        )
+        subtitle_label = Label(self.frame, text=self.SUBTITLE_TEXT)
         subtitle_label.pack(pady=(0, 40))
 
         # Menu buttons container
-        buttons_frame = tk.Frame(self.frame, bg="white")
+        buttons_frame = Frame(self.frame)
         buttons_frame.pack(expand=True)
 
-        # Pokédex button
-        pokedex_button = tk.Button(
-            buttons_frame,
-            text="📚 Pokédex",
-            font=self.BUTTON_FONT,
-            width=self.BUTTON_WIDTH,
-            height=self.BUTTON_HEIGHT,
-            bg="#4CAF50",
-            fg="white",
-            relief="raised",
-            command=self._on_pokedex_click,
-        )
-        pokedex_button.pack(pady=10)
-
-        # Future buttons can be added here
         # Team Builder button (disabled for now)
-        team_builder_button = tk.Button(
-            buttons_frame,
-            text="👥 Team Builder",
-            font=self.BUTTON_FONT,
-            width=self.BUTTON_WIDTH,
-            height=self.BUTTON_HEIGHT,
-            bg="#CCCCCC",
-            fg="#666666",
-            relief="raised",
-            state="disabled",
+        team_builder_button = Button(
+            buttons_frame, text=self.TEAM_BUILDER_BUTTON_TEXT, width=BUTTON_WIDTH, state="disabled"
         )
         team_builder_button.pack(pady=10)
 
         # Max Mechanics button (disabled for now)
-        max_mechanics_button = tk.Button(
-            buttons_frame,
-            text="⚡ Max Mechanics",
-            font=self.BUTTON_FONT,
-            width=self.BUTTON_WIDTH,
-            height=self.BUTTON_HEIGHT,
-            bg="#CCCCCC",
-            fg="#666666",
-            relief="raised",
-            state="disabled",
+        max_mechanics_button = Button(
+            buttons_frame, text=self.MAX_MECHANICS_BUTTON_TEXT, width=BUTTON_WIDTH, state="disabled"
         )
         max_mechanics_button.pack(pady=10)
+        # Pokédex button
+        pokedex_button = Button(
+            buttons_frame, text=self.POKEDEX_BUTTON_TEXT, width=BUTTON_WIDTH, command=self._on_pokedex_click
+        )
+        pokedex_button.pack(pady=10)
 
     def _on_pokedex_click(self) -> None:
         """Handle Pokédex button click."""
         self.navigator.update_status(message="Opening Pokédex...")
-        self.navigator.navigate_to(view_name="pokedex")
+        self.navigator.navigate_to(view_name=POKEDEX_VIEW)
 
     def on_show(self) -> None:
         """Called when the main menu is shown."""

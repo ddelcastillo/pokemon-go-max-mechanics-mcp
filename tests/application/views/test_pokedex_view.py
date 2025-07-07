@@ -1,147 +1,311 @@
-"""Tests for the Pokédex view with image search functionality."""
+"""Tests for the Pokedex view."""
 
-import tkinter as tk
-from unittest.mock import MagicMock, Mock, patch
+import unittest
+from unittest.mock import Mock, patch
 
-import pytest
-
+from src.application.constants.api_constants import (
+    POKEMON_ASSETS_KEY,
+    POKEMON_IMAGE_KEY,
+    POKEMON_SHINY_IMAGE_KEY,
+)
+from src.application.services.pokemon_go_api import PokemonGoApiService
+from src.application.services.web_image_processing import WebImageProcessingService
 from src.application.views.pokedex_view import PokedexView
-from src.domain.ports.outbound.http_client_port import HttpClientPort
+from src.domain.interfaces.image_processor import ProcessedImage
 
 
-class TestPokedexView:
-    """Test cases for the Pokédex view."""
+class TestPokedexView(unittest.TestCase):
+    """Test cases for PokedexView."""
 
-    @pytest.fixture
-    def mock_http_client(self) -> Mock:
-        """Create a mock HTTP client."""
-        mock_client = Mock(spec=HttpClientPort)
-        mock_client.__enter__ = Mock(return_value=mock_client)
-        mock_client.__exit__ = Mock(return_value=None)
-        return mock_client
+    def create_mock_image_service(self) -> Mock:
+        """Create a mock image service."""
+        return Mock(spec=WebImageProcessingService)
 
-    @pytest.fixture
-    def mock_navigator(self) -> Mock:
-        """Create a mock navigator."""
-        navigator = Mock()
-        navigator.navigate_to = Mock()
-        navigator.update_status = Mock()
-        return navigator
+    def create_mock_pokemon_go_api_service(self) -> Mock:
+        """Create a mock Pokemon GO API service."""
+        return Mock(spec=PokemonGoApiService)
 
-    @pytest.fixture
-    def root_window(self) -> tk.Tk:
-        """Create a root window for testing."""
-        root = tk.Tk()
-        root.withdraw()  # Hide the window during testing
-        yield root
-        root.destroy()
+    def setUp(self) -> None:
+        """Set up test fixtures."""
+        self.mock_parent = Mock()
+        self.mock_navigator = Mock()
+        self.mock_image_service = self.create_mock_image_service()
+        self.mock_pokemon_go_api_service = self.create_mock_pokemon_go_api_service()
 
-    @pytest.fixture
-    def pokedex_view(self, root_window: tk.Tk, mock_navigator: Mock, mock_http_client: Mock) -> PokedexView:
-        """Create a Pokédex view instance for testing."""
-        return PokedexView(parent=root_window, navigator=mock_navigator, http_client=mock_http_client)
+        self.pokedex_view = PokedexView(
+            parent=self.mock_parent,
+            navigator=self.mock_navigator,
+            image_service=self.mock_image_service,
+            pokemon_go_api_service=self.mock_pokemon_go_api_service,
+        )
 
-    def test_init_creates_view_with_image_components(
-        self, root_window: tk.Tk, mock_navigator: Mock, mock_http_client: Mock
-    ) -> None:
-        """Test that the view initializes with image search components."""
-        view = PokedexView(parent=root_window, navigator=mock_navigator, http_client=mock_http_client)
+    def test_initialization(self) -> None:
+        """Test that the view initializes correctly."""
+        self.assertIs(self.pokedex_view.image_service, self.mock_image_service)
+        self.assertIs(self.pokedex_view.pokemon_go_api_service, self.mock_pokemon_go_api_service)
+        self.assertIsNone(self.pokedex_view._current_search_thread)
+        self.assertIsNone(self.pokedex_view._current_base_image_thread)
+        self.assertIsNone(self.pokedex_view._current_shiny_image_thread)
+        self.assertFalse(self.pokedex_view._search_cancelled)
+        self.assertFalse(self.pokedex_view._base_image_search_cancelled)
+        self.assertFalse(self.pokedex_view._shiny_image_search_cancelled)
 
-        assert view.http_client is mock_http_client
-        assert view.navigator is mock_navigator
-        assert view._image_search_cancelled is False
-        assert view._current_image_thread is None
-        assert view.image_search_button is None  # Not created until show()
+    def test_fetch_pokemon_base_image_with_valid_data(self) -> None:
+        """Test fetching Pokemon base image with valid data containing image URL."""
+        # Mock data with base image URL
+        image_url = "https://example.com/pikachu.png"
+        pokemon_name = "Pikachu"
 
-    def test_create_widgets_includes_image_search_button(self, pokedex_view: PokedexView) -> None:
-        """Test that create_widgets includes the image search button."""
-        pokedex_view.show()
-
-        assert pokedex_view.image_search_button is not None
-        assert pokedex_view.image_label is not None
-        assert pokedex_view.image_search_button.cget("text") == "🖼️ Search with Image"
-        assert pokedex_view.image_search_button.cget("bg") == "#4CAF50"
-
-    def test_image_search_button_disabled_when_no_input(self, pokedex_view: PokedexView) -> None:
-        """Test that image search shows error when no Pokemon name is entered."""
-        pokedex_view.show()
-
-        with patch.object(pokedex_view, "_show_error") as mock_show_error:
-            pokedex_view._on_image_search_click()
-            mock_show_error.assert_called_once_with("Please enter a Pokémon name.")
-
-    @patch("src.application.views.pokedex_view.threading.Thread")
-    def test_image_search_starts_threads(self, mock_thread: Mock, pokedex_view: PokedexView) -> None:
-        """Test that image search starts both data and image threads."""
-        pokedex_view.show()
-        if pokedex_view.search_entry:
-            pokedex_view.search_entry.insert(0, "pikachu")
-
-        mock_thread_instance = Mock()
-        mock_thread.return_value = mock_thread_instance
-
-        pokedex_view._on_image_search_click()
-
-        # Should create two threads: one for data, one for image
-        assert mock_thread.call_count == 2
-        assert mock_thread_instance.start.call_count == 2
-
-    def test_cancel_image_search_sets_flag(self, pokedex_view: PokedexView) -> None:
-        """Test that canceling image search sets the appropriate flag."""
+        # Mock the image service fetch method
         mock_thread = Mock()
-        mock_thread.is_alive.return_value = True
-        pokedex_view._current_image_thread = mock_thread
+        self.mock_image_service.fetch_image_async.return_value = mock_thread
 
-        pokedex_view._cancel_current_image_search()
+        # Call the method
+        self.pokedex_view._fetch_pokemon_base_image(image_url=image_url, pokemon_name=pokemon_name)
 
-        assert pokedex_view._image_search_cancelled is True
+        # Verify the image service was called with correct parameters
+        self.mock_image_service.fetch_image_async.assert_called_once()
+        call_args = self.mock_image_service.fetch_image_async.call_args
+        self.assertEqual(call_args.kwargs["image_url"], image_url)
+        self.assertEqual(call_args.kwargs["on_success"], self.pokedex_view._on_base_image_success)
+        self.assertEqual(call_args.kwargs["on_error"], self.pokedex_view._on_base_image_error)
+        # Verify the pokemon name is stored internally
+        self.assertEqual(self.pokedex_view._current_pokemon_name, pokemon_name)
 
-    def test_image_searching_state_disables_button(self, pokedex_view: PokedexView) -> None:
-        """Test that image searching state properly disables the button."""
-        pokedex_view.show()
+    def test_fetch_pokemon_shiny_image_with_valid_data(self) -> None:
+        """Test fetching Pokemon shiny image with valid data containing image URL."""
+        # Mock data with shiny image URL
+        image_url = "https://example.com/pikachu_shiny.png"
+        pokemon_name = "Pikachu"
 
-        # Test searching state
-        pokedex_view._set_image_searching_state(searching=True)
-        assert pokedex_view.image_search_button.cget("state") == "disabled"
-        assert pokedex_view.image_search_button.cget("text") == "🔄 Loading Image..."
+        # Mock the image service fetch method
+        mock_thread = Mock()
+        self.mock_image_service.fetch_image_async.return_value = mock_thread
 
-        # Test normal state
-        pokedex_view._set_image_searching_state(searching=False)
-        assert pokedex_view.image_search_button.cget("state") == "normal"
-        assert pokedex_view.image_search_button.cget("text") == "🖼️ Search with Image"
+        # Call the method
+        self.pokedex_view._fetch_pokemon_shiny_image(image_url=image_url, pokemon_name=pokemon_name)
 
-    def test_show_image_error_updates_label(self, pokedex_view: PokedexView) -> None:
-        """Test that image errors are properly displayed."""
-        pokedex_view.show()
+        # Verify the image service was called with correct parameters
+        self.mock_image_service.fetch_image_async.assert_called_once()
+        call_args = self.mock_image_service.fetch_image_async.call_args
+        self.assertEqual(call_args.kwargs["image_url"], image_url)
+        self.assertEqual(call_args.kwargs["on_success"], self.pokedex_view._on_shiny_image_success)
+        self.assertEqual(call_args.kwargs["on_error"], self.pokedex_view._on_shiny_image_error)
+        # Verify the pokemon name is stored internally
+        self.assertEqual(self.pokedex_view._current_pokemon_name, pokemon_name)
 
-        error_message = "Network error"
-        pokedex_view._show_image_error(error_message)
+    def test_on_pokemon_data_success_with_both_images(self) -> None:
+        """Test handling successful Pokemon data with both base and shiny image URLs."""
+        # Mock data with both image URLs in assets (using 'id' field as per API)
+        mock_data = {
+            "id": 25,  # Using numeric ID as per the actual API
+            POKEMON_ASSETS_KEY: {
+                POKEMON_IMAGE_KEY: "https://example.com/pikachu.png",
+                POKEMON_SHINY_IMAGE_KEY: "https://example.com/pikachu_shiny.png",
+            },
+        }
 
-        expected_text = f"Image Error:\n{error_message}"
-        assert pokedex_view.image_label.cget("text") == expected_text
+        # Mock the frame and image fetching
+        self.pokedex_view.frame = Mock()
+        with (
+            patch.object(self.pokedex_view, "_fetch_pokemon_base_image") as mock_fetch_base,
+            patch.object(self.pokedex_view, "_fetch_pokemon_shiny_image") as mock_fetch_shiny,
+        ):
+            self.pokedex_view._on_pokemon_data_success(mock_data)
 
-    @patch("src.application.views.pokedex_view.ImageTk.PhotoImage")
-    def test_display_pokemon_image_updates_label(self, mock_photo_image: Mock, pokedex_view: PokedexView) -> None:
-        """Test that displaying a Pokemon image updates the label properly."""
-        pokedex_view.show()
+            # Verify base image fetching was called (pokemon name will be "25" from id field)
+            mock_fetch_base.assert_called_once_with(
+                image_url=mock_data[POKEMON_ASSETS_KEY][POKEMON_IMAGE_KEY], pokemon_name="25"
+            )
+            # Verify shiny image fetching was called
+            mock_fetch_shiny.assert_called_once_with(
+                image_url=mock_data[POKEMON_ASSETS_KEY][POKEMON_SHINY_IMAGE_KEY], pokemon_name="25"
+            )
 
-        mock_image = Mock()
-        pokemon_name = "pikachu"
+    def test_on_pokemon_data_success_with_base_image_only(self) -> None:
+        """Test handling successful Pokemon data with only base image URL."""
+        # Mock data with only base image URL (using 'id' field as per API)
+        mock_data = {"id": 25, POKEMON_ASSETS_KEY: {POKEMON_IMAGE_KEY: "https://example.com/pikachu.png"}}
 
-        pokedex_view._display_pokemon_image(image=mock_image, pokemon_name=pokemon_name)
+        # Mock the frame and image fetching
+        self.pokedex_view.frame = Mock()
+        with (
+            patch.object(self.pokedex_view, "_fetch_pokemon_base_image") as mock_fetch_base,
+            patch.object(self.pokedex_view, "_fetch_pokemon_shiny_image") as mock_fetch_shiny,
+        ):
+            self.pokedex_view._on_pokemon_data_success(mock_data)
 
-        assert pokedex_view.image_label.cget("image") == str(mock_image)
-        assert pokedex_view.image_label.cget("text") == ""
-        assert hasattr(pokedex_view.image_label, "image")
+            # Verify base image fetching was called (pokemon name will be "25" from id field)
+            mock_fetch_base.assert_called_once_with(
+                image_url=mock_data[POKEMON_ASSETS_KEY][POKEMON_IMAGE_KEY], pokemon_name="25"
+            )
+            # Verify shiny image fetching was NOT called
+            mock_fetch_shiny.assert_not_called()
 
-    def test_on_destroy_cancels_image_search(self, pokedex_view: PokedexView) -> None:
-        """Test that destroying the view cancels image search."""
-        with patch.object(pokedex_view, "_cancel_current_image_search") as mock_cancel:
-            pokedex_view.on_destroy()
-            mock_cancel.assert_called_once()
+    def test_on_pokemon_data_success_without_images(self) -> None:
+        """Test handling successful Pokemon data without image URLs."""
+        # Mock data without image URLs
+        mock_data = {"name": "Pikachu"}
 
-    def test_on_back_click_cancels_image_search(self, pokedex_view: PokedexView) -> None:
-        """Test that going back cancels image search."""
-        with patch.object(pokedex_view, "_cancel_current_image_search") as mock_cancel:
-            pokedex_view._on_back_click()
-            mock_cancel.assert_called_once()
+        # Mock the frame
+        self.pokedex_view.frame = Mock()
+        with (
+            patch.object(self.pokedex_view, "_fetch_pokemon_base_image") as mock_fetch_base,
+            patch.object(self.pokedex_view, "_fetch_pokemon_shiny_image") as mock_fetch_shiny,
+        ):
+            self.pokedex_view._on_pokemon_data_success(mock_data)
+
+            # Verify neither image fetching was called
+            mock_fetch_base.assert_not_called()
+            mock_fetch_shiny.assert_not_called()
+
+    def test_on_pokemon_data_success_with_missing_id(self) -> None:
+        """Test handling successful Pokemon data without id field."""
+        # Mock data without id field
+        mock_data = {POKEMON_ASSETS_KEY: {POKEMON_IMAGE_KEY: "https://example.com/image.png"}}
+
+        # Mock the frame
+        self.pokedex_view.frame = Mock()
+        with patch.object(self.pokedex_view, "_fetch_pokemon_base_image") as mock_fetch_base:
+            self.pokedex_view._on_pokemon_data_success(mock_data)
+
+            # Verify base image fetching was called with "Unknown" as name
+            mock_fetch_base.assert_called_once_with(
+                image_url=mock_data[POKEMON_ASSETS_KEY][POKEMON_IMAGE_KEY], pokemon_name="Unknown"
+            )
+
+    def test_on_pokemon_data_success_with_empty_data(self) -> None:
+        """Test handling empty Pokemon data dictionary."""
+        # Mock empty data
+        mock_data = {}
+
+        # Mock the frame
+        self.pokedex_view.frame = Mock()
+        with (
+            patch.object(self.pokedex_view, "_fetch_pokemon_base_image") as mock_fetch_base,
+            patch.object(self.pokedex_view, "_fetch_pokemon_shiny_image") as mock_fetch_shiny,
+        ):
+            # This should not raise any exceptions
+            self.pokedex_view._on_pokemon_data_success(mock_data)
+
+            # Verify no image fetching was called
+            mock_fetch_base.assert_not_called()
+            mock_fetch_shiny.assert_not_called()
+
+    def test_display_pokemon_base_image_with_processed_image(self) -> None:
+        """Test displaying a processed base image in the UI."""
+        # Create a mock ProcessedImage
+        mock_processed_image = Mock(spec=ProcessedImage)
+        pokemon_name = "Pikachu"
+
+        # Mock the base image label
+        self.pokedex_view.base_image_label = Mock()
+
+        # Call the method
+        self.pokedex_view._display_pokemon_base_image(image=mock_processed_image, pokemon_name=pokemon_name)
+
+        # Verify the image label was configured correctly
+        self.pokedex_view.base_image_label.config.assert_called_once_with(image=mock_processed_image, text="")
+        # Verify the reference was set to prevent garbage collection
+        self.assertEqual(self.pokedex_view.base_image_label.image, mock_processed_image)
+        # Verify the navigator was updated
+        self.mock_navigator.update_status.assert_called_once_with(message="Base image loaded for Pikachu!")
+
+    def test_display_pokemon_shiny_image_with_processed_image(self) -> None:
+        """Test displaying a processed shiny image in the UI."""
+        # Create a mock ProcessedImage
+        mock_processed_image = Mock(spec=ProcessedImage)
+        pokemon_name = "Pikachu"
+
+        # Mock the shiny image label
+        self.pokedex_view.shiny_image_label = Mock()
+
+        # Call the method
+        self.pokedex_view._display_pokemon_shiny_image(image=mock_processed_image, pokemon_name=pokemon_name)
+
+        # Verify the image label was configured correctly
+        self.pokedex_view.shiny_image_label.config.assert_called_once_with(image=mock_processed_image, text="")
+        # Verify the reference was set to prevent garbage collection
+        self.assertEqual(self.pokedex_view.shiny_image_label.image, mock_processed_image)
+        # Verify the navigator was updated
+        self.mock_navigator.update_status.assert_called_once_with(message="Shiny image loaded for Pikachu!")
+
+    def test_on_base_image_success_callback(self) -> None:
+        """Test the base image success callback from the image service."""
+        # Create a mock ProcessedImage
+        mock_processed_image = Mock(spec=ProcessedImage)
+        pokemon_name = "Pikachu"
+
+        # Set up the stored pokemon name
+        self.pokedex_view._current_pokemon_name = pokemon_name
+
+        # Mock the frame
+        self.pokedex_view.frame = Mock()
+
+        # Mock the display method
+        with patch.object(self.pokedex_view, "_display_pokemon_base_image") as mock_display:
+            # The callback signature only takes the processed image
+            self.pokedex_view._on_base_image_success(mock_processed_image)
+
+            # Verify frame.after was called to schedule UI update
+            self.pokedex_view.frame.after.assert_called_once()
+            # The lambda should call _display_pokemon_base_image when executed
+            lambda_func = self.pokedex_view.frame.after.call_args[0][1]
+            lambda_func()
+            mock_display.assert_called_once_with(image=mock_processed_image, pokemon_name=pokemon_name)
+
+    def test_on_shiny_image_success_callback(self) -> None:
+        """Test the shiny image success callback from the image service."""
+        # Create a mock ProcessedImage
+        mock_processed_image = Mock(spec=ProcessedImage)
+        pokemon_name = "Pikachu"
+
+        # Set up the stored pokemon name
+        self.pokedex_view._current_pokemon_name = pokemon_name
+
+        # Mock the frame
+        self.pokedex_view.frame = Mock()
+
+        # Mock the display method
+        with patch.object(self.pokedex_view, "_display_pokemon_shiny_image") as mock_display:
+            # The callback signature only takes the processed image
+            self.pokedex_view._on_shiny_image_success(mock_processed_image)
+
+            # Verify frame.after was called to schedule UI update
+            self.pokedex_view.frame.after.assert_called_once()
+            # The lambda should call _display_pokemon_shiny_image when executed
+            lambda_func = self.pokedex_view.frame.after.call_args[0][1]
+            lambda_func()
+            mock_display.assert_called_once_with(image=mock_processed_image, pokemon_name=pokemon_name)
+
+    def test_clear_images(self) -> None:
+        """Test clearing both image displays."""
+        # Mock both image labels
+        self.pokedex_view.base_image_label = Mock()
+        self.pokedex_view.shiny_image_label = Mock()
+
+        # Call the method
+        self.pokedex_view._clear_images()
+
+        # Verify both image labels were cleared
+        self.pokedex_view.base_image_label.config.assert_called_once_with(image="", text="No image loaded.")
+        self.pokedex_view.shiny_image_label.config.assert_called_once_with(image="", text="No image loaded.")
+
+    def test_cancel_current_image_searches(self) -> None:
+        """Test canceling current image searches."""
+        # Mock threads as alive
+        self.pokedex_view._current_base_image_thread = Mock()
+        self.pokedex_view._current_base_image_thread.is_alive.return_value = True
+        self.pokedex_view._current_shiny_image_thread = Mock()
+        self.pokedex_view._current_shiny_image_thread.is_alive.return_value = True
+
+        # Call the method
+        self.pokedex_view._cancel_current_image_searches()
+
+        # Verify both cancellation flags were set
+        self.assertTrue(self.pokedex_view._base_image_search_cancelled)
+        self.assertTrue(self.pokedex_view._shiny_image_search_cancelled)
+
+
+if __name__ == "__main__":
+    unittest.main()

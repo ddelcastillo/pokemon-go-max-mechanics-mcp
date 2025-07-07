@@ -1,42 +1,42 @@
-[tool.poetry]
+[project]
 name = "pokemon-go-max-mechanics"
 version = "0.1.0"
 description = "Pokémon Go project related to Max mechanics."
-authors = ["Daniel del Castillo <fwd.ddca@pm.me>"]
-license = "MIT"
+authors = [{ name = "Daniel del Castillo", email = "fwd.ddca@pm.me" }]
+requires-python = ">=3.13, <3.14"
 readme = "README.md"
-packages = [
-    { include = "src" }
+license = "MIT"
+dependencies = [
+    "httpx>=0.28.1, <1.0.0",
+    "injector>=0.22.0, <1.0.0",
+    "pillow>=10.0.0, <11.0.0",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.13"
-httpx = ">=0.28.1, <1.0.0"
-injector = ">=0.22.0, <1.0.0"
-pillow = ">=10.0.0, <11.0.0"
+[dependency-groups]
+code-quality = [
+    "mypy>=1.16.0,<2",
+    "ruff>=0.11.13, <1.0.0",
+    "isort>=6.0.1,<7",
+]
+test = [
+    "pytest>=8.4.0,<9",
+    "pytest-asyncio>=0.23.0,<0.24",
+]
+psycopg2-binary = ["psycopg2-binary>=2.9.10,<3"]
+psycopg2 = ["psycopg2>=2.9.10,<3"]
 
-[tool.poetry.group.code-quality]
-optional = true
-[tool.poetry.group.code-quality.dependencies]
-mypy = "^1.16.0"
-ruff = ">=0.11.13, <1.0.0"
-isort = "^6.0.1"
+[tool.uv]
+# All dependency groups are now optional - install them explicitly when needed
 
-[tool.poetry.group.test]
-optional = true
-[tool.poetry.group.test.dependencies]
-pytest = "^8.4.0"
-pytest-asyncio = "^0.23.0"
+[tool.hatch.build.targets.sdist]
+include = ["src"]
 
-[tool.poetry.group.psycopg2-binary]
-optional = true
-[tool.poetry.group.psycopg2-binary.dependencies]
-psycopg2-binary = "^2.9.10"
+[tool.hatch.build.targets.wheel]
+include = ["src"]
 
-[tool.poetry.group.psycopg2]
-optional = true
-[tool.poetry.group.psycopg2.dependencies]
-psycopg2 = "^2.9.10"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.isort]
 profile = "black"
@@ -72,7 +72,7 @@ docstring-code-format = false
 indent-style = "space"
 line-ending = "lf"
 quote-style = "double"
-skip-magic-trailing-comma = true
+skip-magic-trailing-comma = false
 
 [tool.ruff.lint]
 select = [
@@ -99,7 +99,3 @@ exclude = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

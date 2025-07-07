@@ -1,6 +1,7 @@
-import pytest
-import httpx
 from unittest.mock import AsyncMock, Mock, patch
+
+import httpx
+import pytest
 
 from src.domain.errors.http import HttpClientError
 from src.infrastructure.adapters.outbound.httpx_client_adapter import HttpxClientAdapter

@@ -2,7 +2,7 @@
 
 import tkinter as tk
 import unittest
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import MagicMock, Mock, call, patch
 
 from src.application.app import PokemonGoApp
 

@@ -1,13 +1,37 @@
 """Abstract base view for the application."""
 
 from abc import abstractmethod
-from tkinter import BOTH
-from tkinter.ttk import Frame, TclError, Widget
+from tkinter import BOTH, TclError
+from tkinter.ttk import Frame, Widget
 from typing import Protocol
+
+from src.application.constants.ui_constants import (
+    DEFAULT_FRAME_PADDING_X,
+    DEFAULT_FRAME_PADDING_Y,
+)
 
 
 class ViewNavigator(Protocol):
-    """Protocol for view navigation."""
+    """Protocol for navigation and status updates between user interface screens.
+
+    This protocol defines the required interface for any object that manages
+    navigation between different "views" (screens or panels) in the application,
+    as well as updating status messages for the user.
+
+    In the context of a graphical user interface (GUI), a "view" represents a
+    distinct part of the application's interface, such as a main menu, a form,
+    or a results page. The ViewNavigator protocol allows views to request
+    navigation to other views by name, and to display status messages to the user,
+    without needing to know the details of how navigation or status updates are
+    implemented.
+
+    This abstraction makes it possible to decouple the logic of individual views
+    from the overall application flow, improving modularity and testability.
+
+    Methods:
+        navigate_to: Switches the application to display a different view, identified by name.
+        update_status: Updates a status message area in the application's interface.
+    """
 
     def navigate_to(self, *, view_name: str) -> None:
         """Navigate to a specific view.
@@ -54,7 +78,8 @@ class BaseView:
     Example:
         class MyView(BaseView):
             def create_widgets(self) -> None:
-                label = tk.Label(self.frame, text="Hello, world!")
+                from tkinter.ttk import Label
+                label = Label(self.frame, text="Hello, world!")
                 label.pack()
     """
 
@@ -85,10 +110,10 @@ class BaseView:
         into the parent widget, and calls the on_show hook.
         """
         if self.frame is None:
-            self.frame = Frame(self.parent, bg="white")
+            self.frame = Frame(self.parent)
             self.create_widgets()
 
-        self.frame.pack(fill=BOTH, expand=True, padx=20, pady=20)
+        self.frame.pack(fill=BOTH, expand=True, padx=DEFAULT_FRAME_PADDING_X, pady=DEFAULT_FRAME_PADDING_Y)
         self.on_show()
 
     def hide(self) -> None:
