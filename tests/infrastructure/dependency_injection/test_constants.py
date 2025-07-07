@@ -1,6 +1,9 @@
 """Tests for dependency injection constants."""
 
-from src.constants.api_constants import DEFAULT_HTTP_TIMEOUT, POKEMON_GO_API_BASE_URL
+from src.application.constants.api_constants import (
+    DEFAULT_HTTP_TIMEOUT,
+    POKEMON_GO_API_BASE_URL,
+)
 
 
 class TestConstants:
@@ -8,7 +11,7 @@ class TestConstants:
 
     def test_pokemon_go_api_base_url_is_defined(self) -> None:
         """Test that the Pokémon GO API base URL is properly defined."""
-        assert POKEMON_GO_API_BASE_URL == "https://pogoapi.net/api/v1"
+        assert POKEMON_GO_API_BASE_URL == "https://pokemon-go-api.github.io/pokemon-go-api/api"
         assert isinstance(POKEMON_GO_API_BASE_URL, str)
         assert POKEMON_GO_API_BASE_URL.startswith("https://")
 

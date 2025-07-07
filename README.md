@@ -1,41 +1,37 @@
-# Pokémon Go Max Mechanics
+# Pokémon Go Max Mechanics (MCP? soon)
 
 ![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)
-![Poetry](https://img.shields.io/badge/poetry-dependency%20management-blue.svg)
+![uv](https://img.shields.io/badge/uv-dependency%20management-blue.svg)
 ![Tkinter](https://img.shields.io/badge/tkinter-GUI-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Code Quality](https://img.shields.io/badge/code%20quality-mypy%20%7C%20ruff%20%7C%20isort-brightgreen.svg)
 
-A Python GUI application built with tkinter for exploring and analyzing Pokémon Go Max mechanics. This project provides an intuitive interface for understanding the complex mechanics behind Max moves, Dynamax/Gigantamax transformations, and related battle mechanics.
+A Python GUI application for Pokémon Go Max mechanics that calculates optimal attackers and tanks, with additional informational views. This project is designed to eventually become an MCP (Model Context Protocol) server, providing tools and context for AI agents to answer Max mechanics queries.
 
-## 🚀 Features
-
-- **Clean GUI Interface**: Built with tkinter for cross-platform compatibility
-- **Extensible Architecture**: Modular design ready for additional features
-- **Type Safety**: Full type hints with mypy compliance
-- **Code Quality**: Enforced with ruff, isort, and comprehensive linting
+This is a passion project that combines Pokémon Go strategy optimization with tinkering around MCP server development - exploring how to make complex game mechanics accessible to AI assistants.
 
 ## 📋 Requirements
 
 - Python 3.13+
-- Poetry (for dependency management)
+- uv (for dependency management)
 
 ## 🛠️ Installation
 
-1. **Clone the repository**:
+1. **Install uv** (if not already installed).
+
+2. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd pokemon-go-max-mechanics
+   git clone https://github.com/ddelcastillo/pokemon-go-max-mechanics-mcp.git
+   cd pokemon-go-max-mechanics-mcp
    ```
 
-2. **Install dependencies using Poetry**:
+3. **Install dependencies**:
    ```bash
-   poetry install
-   ```
-
-3. **Install development dependencies** (optional, for contributing):
-   ```bash
-   poetry install --with code-quality,test
+   # Install project dependencies
+   uv sync
+   
+   # Install development dependencies
+   uv sync --group code-quality --group test
    ```
 
 ## 🎮 Usage
@@ -43,95 +39,61 @@ A Python GUI application built with tkinter for exploring and analyzing Pokémon
 Run the application with:
 
 ```bash
-# Using Poetry
-poetry run python main.py
-
-# Or activate the virtual environment first
-poetry shell
-python main.py
+# Run the GUI application
+uv run python main.py
 ```
 
-The application will open a GUI window with the main interface for exploring Max mechanics.
+The application will open a GUI window with the main interface for exploring Max mechanics and calculating optimal strategies.
 
 ## 🏗️ Project Structure
 
+This project employs **hexagonal architecture** with clear separation of concerns:
+
 ```
-pokemon-go-max-mechanics/
+pokemon-go-max-mechanics-mcp/
 ├── main.py                           # Application entry point
 ├── src/
-│   └── application/
-│       ├── app.py                   # Main application class
-│       └── gui/
-│           └── widgets/             # Custom GUI widgets
-├── pyproject.toml                   # Poetry configuration and tool settings
-└── README.md                       # Project documentation
+│   ├── application/                  # Application layer (use cases, services)
+│   ├── domain/                       # Domain layer (entities, ports)
+│   │   └── ports/                    # Abstract ports (inbound/outbound)
+│   └── infrastructure/               # Infrastructure layer (adapters, DI)
+│       ├── adapters/                 # Concrete adapters (inbound/outbound)
+│       └── dependency_injection/     # DI modules and setup
+├── tests/                            # Test mirror structure
+└── pyproject.toml                    # uv configuration and tool settings
 ```
+
+The architecture follows ports & adapters pattern with dependency injection for clean, testable code.
 
 ## 🧪 Development
 
 ### Code Quality Checks
 
-Run all code quality checks in a single command:
-
 ```bash
 # Full code quality check suite
-poetry run mypy src/ && poetry run isort --check-only . && poetry run ruff check .
-```
+uv run ruff check . && uv run isort --check-only . && uv run mypy src/
 
-### Individual Tools
-
-```bash
-# Type checking with mypy
-poetry run mypy src/
-
-# Import sorting with isort
-poetry run isort .
-poetry run isort --check-only .  # Check without modifying
-
-# Linting and formatting with ruff
-poetry run ruff check .           # Check for issues
-poetry run ruff format .          # Format code
-poetry run ruff check --fix .     # Auto-fix issues
+# Auto-fix formatting
+uv run ruff format . && uv run isort .
 ```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-poetry run pytest
+uv run pytest
 
-# Run tests with coverage
-poetry run pytest --cov=src
+# Run with coverage
+uv run pytest --cov=src
 ```
-
-### Development Workflow
-
-1. **Make your changes**
-2. **Run code quality checks**:
-   ```bash
-   poetry run mypy src/ && poetry run isort --check-only . && poetry run ruff check .
-   ```
-3. **Fix any issues** reported by the tools
-4. **Run tests** to ensure functionality
-5. **Commit your changes**
-
-## 📝 Configuration
-
-The project uses several configuration files:
-
-- **`pyproject.toml`**: Poetry dependencies, mypy, ruff, and isort configuration
-- **Tool Settings**:
-  - **mypy**: Strict type checking with Python 3.13 target
-  - **ruff**: Line length 119, comprehensive linting rules
-  - **isort**: Black-compatible profile for import sorting
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run the code quality checks (see Development section)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Make your changes and run quality checks
+4. Commit using conventional commits with emojis (`git commit -m "✨ feat: add amazing feature"`)
+5. Reference the GitHub issue you're solving (e.g., "Closes #123")
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
@@ -141,12 +103,13 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## 🎯 Roadmap
 
-- [ ] Max move damage calculator
-- [ ] Dynamax/Gigantamax form analyzer
-- [ ] Battle mechanic simulations
-- [ ] Data visualization for Max mechanics
-- [ ] Import/export functionality for battle data
+- [ ] **General Pokémon domain mapping** - Core entities and value objects
+- [ ] **Max-related domain mapping** - CPM calculations, HP mechanics, known bosses
+- [ ] **First max services** - Damage calculations for tanks & defenders
+- [ ] **Composed services** - Querying optimal tanks & defenders
+- [ ] **Database normalization** - Persist analysis views in relational database
+- [ ] **MCP support** - Adapt services for Model Context Protocol
+- [ ] **MCP documentation** - Server setup and optimization guides
+- [ ] **Max Simulator** - Battle simulation with initial known strategies
 
----
-
-**Built with ❤️ for the Pokémon Go community**
+Made by Maskarayde for Team Virrey.

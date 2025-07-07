@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: |
+          uv sync --group code-quality --group test
+
+      - name: Install xvfb for GUI tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Run code quality checks
+        run: |
+          echo "Running Ruff linter..."
+          uv run ruff check .
+
+          echo "Running isort import sorting check..."
+          uv run python -m isort --check-only .
+
+          echo "Running mypy type checking..."
+          uv run python -m mypy src/
+
+      - name: Run tests
+        run: |
+          echo "Running pytest..."
+          xvfb-run -a uv run python -m pytest --cov=src --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

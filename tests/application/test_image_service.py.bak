@@ -1,0 +1,343 @@
+"""Tests for the Pokemon Image Service."""
+
+import threading
+import unittest
+from io import BytesIO
+from unittest.mock import Mock, patch, MagicMock, call
+
+from PIL import Image, ImageTk
+
+from src.application.services.images import PokemonImageService
+from src.domain.errors.http import HttpClientError
+from src.domain.ports.outbound.http_client_port import HttpClientPort
+
+
+class TestPokemonImageService(unittest.TestCase):
+    """Test cases for PokemonImageService."""
+
+    def setUp(self) -> None:
+        """Set up test fixtures."""
+        self.mock_http_client = Mock(spec=HttpClientPort)
+        self.mock_http_client.__enter__ = Mock(return_value=self.mock_http_client)
+        self.mock_http_client.__exit__ = Mock(return_value=None)
+        
+        self.service = PokemonImageService(http_client=self.mock_http_client)
+        
+        # Mock callbacks
+        self.mock_on_success = Mock()
+        self.mock_on_error = Mock()
+        self.mock_on_started = Mock()
+        self.mock_on_finished = Mock()
+        self.mock_cancellation_check = Mock(return_value=False)
+
+    def test_initialization(self) -> None:
+        """Test that the service initializes correctly."""
+        service = PokemonImageService(http_client=self.mock_http_client)
+        
+        assert service.http_client is self.mock_http_client
+        assert service.IMAGE_SIZE == (200, 200)
+
+    @patch('threading.Thread')
+    def test_fetch_pokemon_image_async_starts_thread(self, mock_thread: Mock) -> None:
+        """Test that fetch_pokemon_image_async starts a daemon thread."""
+        mock_thread_instance = Mock()
+        mock_thread.return_value = mock_thread_instance
+        
+        result = self.service.fetch_pokemon_image_async(
+            pokemon_name="pikachu",
+            on_success=self.mock_on_success,
+            on_error=self.mock_on_error,
+            on_started=self.mock_on_started,
+            on_finished=self.mock_on_finished,
+            cancellation_check=self.mock_cancellation_check,
+        )
+        
+        # Verify thread was created with correct parameters
+        mock_thread.assert_called_once()
+        args, kwargs = mock_thread.call_args
+        assert kwargs['daemon'] is True
+        assert kwargs['target'] == self.service._fetch_pokemon_image_thread
+        assert 'pikachu' in args[1]  # pokemon_name in args
+        
+        # Verify thread was started
+        mock_thread_instance.start.assert_called_once()
+        assert result is mock_thread_instance
+
+    def test_get_pokemon_id_from_api_success(self) -> None:
+        """Test successful Pokemon ID retrieval from API."""
+        # Mock successful API response
+        self.mock_http_client.get.return_value = {"id": 25, "name": "pikachu"}
+        
+        result = self.service._get_pokemon_id_from_api(
+            client=self.mock_http_client,
+            pokemon_name="pikachu",
+            cancellation_check=self.mock_cancellation_check
+        )
+        
+        assert result == 25
+        self.mock_http_client.get.assert_called_once_with(
+            url="https://pokeapi.co/api/v2/pokemon/pikachu"
+        )
+
+    def test_get_pokemon_id_from_api_no_id_in_response(self) -> None:
+        """Test handling of API response without ID."""
+        # Mock API response without ID
+        self.mock_http_client.get.return_value = {"name": "pikachu"}
+        
+        with pytest.raises(ValueError, match="Could not find Pokemon 'pikachu' in PokeAPI"):
+            self.service._get_pokemon_id_from_api(
+                client=self.mock_http_client,
+                pokemon_name="pikachu",
+                cancellation_check=self.mock_cancellation_check
+            )
+
+    def test_get_pokemon_id_from_api_http_error(self) -> None:
+        """Test handling of HTTP error during API call."""
+        # Mock HTTP error
+        self.mock_http_client.get.side_effect = HttpClientError("404 Not Found", status_code=404)
+        
+        with pytest.raises(ValueError, match="Could not find Pokemon 'pikachu' in PokeAPI"):
+            self.service._get_pokemon_id_from_api(
+                client=self.mock_http_client,
+                pokemon_name="pikachu",
+                cancellation_check=self.mock_cancellation_check
+            )
+
+    def test_get_pokemon_id_from_api_cancelled(self) -> None:
+        """Test that cancelled operation returns None."""
+        self.mock_cancellation_check.return_value = True
+        
+        result = self.service._get_pokemon_id_from_api(
+            client=self.mock_http_client,
+            pokemon_name="pikachu",
+            cancellation_check=self.mock_cancellation_check
+        )
+        
+        assert result is None
+        self.mock_http_client.get.assert_not_called()
+
+    @patch('src.application.services.images.Image')
+    @patch('src.application.services.images.ImageTk.PhotoImage')
+    def test_download_and_process_image_success(self, mock_photo_image: Mock, mock_image: Mock) -> None:
+        """Test successful image download and processing."""
+        # Mock binary image data
+        mock_image_data = b"fake_image_data"
+        self.mock_http_client.get_binary.return_value = mock_image_data
+        
+        # Mock PIL image processing
+        mock_pil_image = Mock()
+        mock_pil_image.mode = "RGB"
+        mock_converted_image = Mock()
+        mock_resized_image = Mock()
+        mock_final_image = Mock()
+        
+        mock_image.open.return_value = mock_pil_image
+        mock_pil_image.convert.return_value = mock_converted_image
+        mock_converted_image.resize.return_value = mock_resized_image
+        mock_photo_image.return_value = mock_final_image
+        
+        result = self.service._download_and_process_image(
+            client=self.mock_http_client,
+            pokemon_id=25,
+            cancellation_check=self.mock_cancellation_check
+        )
+        
+        # Verify API call
+        self.mock_http_client.get_binary.assert_called_once_with(
+            url="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+        )
+        
+        # Verify image processing
+        mock_image.open.assert_called_once()
+        mock_pil_image.convert.assert_called_once_with("RGBA")
+        mock_converted_image.resize.assert_called_once_with((200, 200), Image.Resampling.LANCZOS)
+        mock_photo_image.assert_called_once_with(mock_resized_image)
+        
+        assert result is mock_final_image
+
+    def test_download_and_process_image_cancelled_during_download(self) -> None:
+        """Test that cancellation during download returns None."""
+        # Mock cancellation after download
+        self.mock_cancellation_check.side_effect = [False, True]  # False initially, True after download
+        self.mock_http_client.get_binary.return_value = b"fake_data"
+        
+        result = self.service._download_and_process_image(
+            client=self.mock_http_client,
+            pokemon_id=25,
+            cancellation_check=self.mock_cancellation_check
+        )
+        
+        assert result is None
+
+    def test_download_and_process_image_http_error(self) -> None:
+        """Test handling of HTTP error during image download."""
+        self.mock_http_client.get_binary.side_effect = HttpClientError("404 Not Found", status_code=404)
+        
+        with pytest.raises(ValueError, match="Failed to load image"):
+            self.service._download_and_process_image(
+                client=self.mock_http_client,
+                pokemon_id=25,
+                cancellation_check=self.mock_cancellation_check
+            )
+
+    @patch('src.application.services.images.Image')
+    def test_download_and_process_image_handles_rgba_image(self, mock_image: Mock) -> None:
+        """Test that RGBA images are not converted again."""
+        mock_image_data = b"fake_rgba_image_data"
+        self.mock_http_client.get_binary.return_value = mock_image_data
+        
+        # Mock PIL image that's already RGBA
+        mock_pil_image = Mock()
+        mock_pil_image.mode = "RGBA"
+        mock_resized_image = Mock()
+        
+        mock_image.open.return_value = mock_pil_image
+        mock_pil_image.resize.return_value = mock_resized_image
+        
+        with patch('src.application.services.images.ImageTk.PhotoImage') as mock_photo:
+            self.service._download_and_process_image(
+                client=self.mock_http_client,
+                pokemon_id=25,
+                cancellation_check=self.mock_cancellation_check
+            )
+        
+        # Should not call convert since it's already RGBA
+        mock_pil_image.convert.assert_not_called()
+        mock_pil_image.resize.assert_called_once_with((200, 200), Image.Resampling.LANCZOS)
+
+    def test_fetch_pokemon_image_thread_success_flow(self) -> None:
+        """Test the complete success flow of the image fetching thread."""
+        with patch.object(self.service, '_get_pokemon_id_from_api', return_value=25) as mock_get_id, \
+             patch.object(self.service, '_download_and_process_image') as mock_download:
+            
+            mock_processed_image = Mock()
+            mock_download.return_value = mock_processed_image
+            
+            self.service._fetch_pokemon_image_thread(
+                pokemon_name="pikachu",
+                on_success=self.mock_on_success,
+                on_error=self.mock_on_error,
+                on_started=self.mock_on_started,
+                on_finished=self.mock_on_finished,
+                cancellation_check=self.mock_cancellation_check
+            )
+            
+            # Verify callback sequence
+            self.mock_on_started.assert_called_once()
+            mock_get_id.assert_called_once_with(
+                client=self.mock_http_client,
+                pokemon_name="pikachu",
+                cancellation_check=self.mock_cancellation_check
+            )
+            mock_download.assert_called_once_with(
+                client=self.mock_http_client,
+                pokemon_id=25,
+                cancellation_check=self.mock_cancellation_check
+            )
+            self.mock_on_success.assert_called_once_with(mock_processed_image, "pikachu")
+            self.mock_on_finished.assert_called_once()
+            self.mock_on_error.assert_not_called()
+
+    def test_fetch_pokemon_image_thread_pokemon_not_found(self) -> None:
+        """Test handling when Pokemon is not found."""
+        with patch.object(self.service, '_get_pokemon_id_from_api', return_value=None):
+            
+            self.service._fetch_pokemon_image_thread(
+                pokemon_name="nonexistent",
+                on_success=self.mock_on_success,
+                on_error=self.mock_on_error,
+                on_started=self.mock_on_started,
+                on_finished=self.mock_on_finished,
+                cancellation_check=self.mock_cancellation_check
+            )
+            
+            self.mock_on_started.assert_called_once()
+            self.mock_on_error.assert_called_once_with("Could not find Pokemon 'nonexistent' in PokeAPI")
+            self.mock_on_success.assert_not_called()
+            self.mock_on_finished.assert_not_called()  # Should not be called when Pokemon not found
+
+    def test_fetch_pokemon_image_thread_cancelled_early(self) -> None:
+        """Test handling of early cancellation."""
+        self.mock_cancellation_check.return_value = True
+        
+        self.service._fetch_pokemon_image_thread(
+            pokemon_name="pikachu",
+            on_success=self.mock_on_success,
+            on_error=self.mock_on_error,
+            on_started=self.mock_on_started,
+            on_finished=self.mock_on_finished,
+            cancellation_check=self.mock_cancellation_check
+        )
+        
+        self.mock_on_started.assert_called_once()
+        # Should exit early due to cancellation
+        self.mock_on_success.assert_not_called()
+        self.mock_on_error.assert_not_called()
+        self.mock_on_finished.assert_not_called()
+
+    def test_fetch_pokemon_image_thread_exception_handling(self) -> None:
+        """Test exception handling in the image fetching thread."""
+        with patch.object(self.service, '_get_pokemon_id_from_api', side_effect=Exception("Network error")):
+            
+            self.service._fetch_pokemon_image_thread(
+                pokemon_name="pikachu",
+                on_success=self.mock_on_success,
+                on_error=self.mock_on_error,
+                on_started=self.mock_on_started,
+                on_finished=self.mock_on_finished,
+                cancellation_check=self.mock_cancellation_check
+            )
+            
+            self.mock_on_started.assert_called_once()
+            self.mock_on_error.assert_called_once()
+            error_call_args = self.mock_on_error.call_args[0][0]
+            assert "Error loading image for pikachu" in error_call_args
+            assert "Network error" in error_call_args
+            self.mock_on_success.assert_not_called()
+            self.mock_on_finished.assert_called_once()
+
+    def test_fetch_pokemon_image_thread_cancelled_during_processing(self) -> None:
+        """Test cancellation during image processing."""
+        with patch.object(self.service, '_get_pokemon_id_from_api', return_value=25) as mock_get_id:
+            # Simulate cancellation after getting ID
+            self.mock_cancellation_check.side_effect = [False, False, True]  # Cancel during processing
+            
+            self.service._fetch_pokemon_image_thread(
+                pokemon_name="pikachu",
+                on_success=self.mock_on_success,
+                on_error=self.mock_on_error,
+                on_started=self.mock_on_started,
+                on_finished=self.mock_on_finished,
+                cancellation_check=self.mock_cancellation_check
+            )
+            
+            self.mock_on_started.assert_called_once()
+            mock_get_id.assert_called_once()
+            # Should exit before calling on_success due to cancellation
+            self.mock_on_success.assert_not_called()
+            self.mock_on_error.assert_not_called()
+            self.mock_on_finished.assert_not_called()
+
+    def test_fetch_pokemon_image_thread_image_processing_returns_none(self) -> None:
+        """Test handling when image processing returns None (e.g., due to cancellation)."""
+        with patch.object(self.service, '_get_pokemon_id_from_api', return_value=25), \
+             patch.object(self.service, '_download_and_process_image', return_value=None):
+            
+            self.service._fetch_pokemon_image_thread(
+                pokemon_name="pikachu",
+                on_success=self.mock_on_success,
+                on_error=self.mock_on_error,
+                on_started=self.mock_on_started,
+                on_finished=self.mock_on_finished,
+                cancellation_check=self.mock_cancellation_check
+            )
+            
+            self.mock_on_started.assert_called_once()
+            # Should not call on_success when processing returns None
+            self.mock_on_success.assert_not_called()
+            self.mock_on_error.assert_not_called()
+            self.mock_on_finished.assert_called_once()
+
+
+if __name__ == '__main__':
+    unittest.main()
