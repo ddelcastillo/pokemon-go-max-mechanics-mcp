@@ -10,7 +10,9 @@ class TestHttpClientModule:
     """Test suite for HttpClientModule."""
 
     def test_module_binds_http_client_port(self) -> None:
-        """Test that the module properly binds HttpClientPort."""
+        """
+        Verify that the HttpClientModule binds HttpClientPort to an instance of HttpxClientAdapter.
+        """
         injector = Injector(modules=[HttpClientModule()])
 
         http_client = injector.get(HttpClientPort)  # type: ignore[type-abstract]
@@ -18,7 +20,9 @@ class TestHttpClientModule:
         assert isinstance(http_client, HttpxClientAdapter)
 
     def test_singleton_scope(self) -> None:
-        """Test that HttpClientPort is bound as singleton."""
+        """
+        Verify that the HttpClientPort binding in the injector returns the same singleton instance on multiple retrievals.
+        """
         injector = Injector(modules=[HttpClientModule()])
 
         http_client1 = injector.get(HttpClientPort)  # type: ignore[type-abstract]

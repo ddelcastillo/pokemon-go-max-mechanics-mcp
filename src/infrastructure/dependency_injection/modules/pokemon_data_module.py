@@ -14,12 +14,10 @@ class PokemonDataModule(Module):
     @provider
     @singleton
     def provide_pokemon_data_port(self, adapter: PokemonGoApiAdapter) -> PokemonDataPort[PokemonDict]:
-        """Provide the Pokemon data port implementation.
-
-        Args:
-            adapter: The Pokemon GO API adapter that returns dictionary-based data.
-
+        """
+        Provides a singleton implementation of the Pokemon data port using the given API adapter.
+        
         Returns:
-            The Pokemon data port implementation configured for dictionary data.
+            PokemonDataPort[PokemonDict]: The provided adapter as the implementation for dictionary-based Pokemon data access.
         """
         return adapter

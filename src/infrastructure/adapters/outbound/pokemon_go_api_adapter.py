@@ -21,40 +21,42 @@ class PokemonGoApiAdapter(PokemonDataPort[PokemonDict]):
 
     @inject
     def __init__(self, *, http_client: HttpClientPort) -> None:
-        """Initialize the Pokemon GO API adapter.
-
-        Args:
-            http_client: The HTTP client to use for API requests.
+        """
+        Initialize the adapter with an HTTP client for making API requests to the Pokemon GO API.
         """
         self._http_client: HttpClientPort = http_client
 
     def fetch_pokemon_data(self, *, pokemon_name: str) -> PokemonDict:
-        """Fetch Pokemon data from Pokemon GO API.
-
-        Args:
-            pokemon_name: The name of the Pokemon to fetch data for.
-
+        """
+        Retrieve data for a specified Pokemon from the Pokemon GO API.
+        
+        Parameters:
+            pokemon_name (str): The name of the Pokemon to retrieve.
+        
         Returns:
-            Dictionary containing Pokemon data.
-
+            PokemonDict: A dictionary containing the Pokemon's data.
+        
         Raises:
-            ValueError: If Pokemon is not found or if there's an error fetching data.
+            ValueError: If the Pokemon is not found or if an error occurs during data retrieval.
         """
         with self._http_client as client:
             return self._fetch_pokemon_data_from_api(client=client, pokemon_name=pokemon_name)
 
     def _fetch_pokemon_data_from_api(self, *, client: HttpClientPort, pokemon_name: str) -> PokemonDict:
-        """Fetch Pokemon data from Pokemon GO API.
-
-        Args:
-            client: HTTP client instance.
-            pokemon_name: Name of the Pokemon to search for.
-
+        """
+        Retrieve and validate Pokemon data from the Pokemon GO API by name.
+        
+        Attempts to fetch the specified Pokemon's data using the provided HTTP client. Validates that the response is a non-empty dictionary containing the required keys `"dexNr"` and `"names"`. Raises a `ValueError` if the API response is invalid, the Pokemon is not found, or an error occurs during the request.
+        
+        Parameters:
+            client (HttpClientPort): The HTTP client used to perform the API request.
+            pokemon_name (str): The name of the Pokemon to retrieve.
+        
         Returns:
-            Dictionary containing Pokemon data.
-
+            PokemonDict: A dictionary containing the Pokemon's data.
+        
         Raises:
-            ValueError: If API response is invalid or Pokemon is not found.
+            ValueError: If the API response is invalid, the Pokemon is not found, or an error occurs during the request.
         """
         pokemon_name = pokemon_name.upper()
         pokedex_url = self._POKEMON_POKEDEX_URL_BY_NAME_TEMPLATE.format(name=pokemon_name)

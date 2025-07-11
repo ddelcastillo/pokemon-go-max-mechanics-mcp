@@ -12,7 +12,11 @@ class MockTestView(BaseView):
     """Test implementation of BaseView."""
 
     def __init__(self, *, parent: Widget, navigator: ViewNavigator) -> None:
-        """Initialize test view."""
+        """
+        Initialize the mock test view with a parent widget and navigator.
+        
+        Sets up the view for testing by initializing the `widgets_created` flag to `False`.
+        """
         super().__init__(parent=parent, navigator=navigator)
         self.widgets_created = False
 
@@ -28,7 +32,9 @@ class TestBaseView(unittest.TestCase):
     """Test cases for BaseView class."""
 
     def setUp(self) -> None:
-        """Set up test fixtures."""
+        """
+        Initializes the Tkinter root window, parent frame, mock navigator, and test view instance before each test.
+        """
         self.root = tk.Tk()
         # Create a ttk Frame as the parent to match the expected Widget type
         from tkinter.ttk import Frame
@@ -38,12 +44,16 @@ class TestBaseView(unittest.TestCase):
         self.view = MockTestView(parent=self.parent_frame, navigator=self.navigator)
 
     def tearDown(self) -> None:
-        """Clean up test fixtures."""
+        """
+        Cleans up the test environment by destroying the view and the Tkinter root window after each test.
+        """
         self.view.destroy()
         self.root.destroy()
 
     def test_initialization(self) -> None:
-        """Test view initialization."""
+        """
+        Test that the view is initialized with the correct parent, navigator, and no frame.
+        """
         self.assertEqual(self.view.parent, self.parent_frame)
         self.assertEqual(self.view.navigator, self.navigator)
         self.assertIsNone(self.view.frame)
@@ -74,7 +84,9 @@ class TestBaseView(unittest.TestCase):
         self.assertFalse(self.view.widgets_created)
 
     def test_hide_removes_frame_from_display(self) -> None:
-        """Test that hide() removes frame from display."""
+        """
+        Test that calling hide() on the view removes its frame from display by invoking the frame's pack_forget method.
+        """
         self.view.show()
 
         # Mock the pack_forget method to track calls

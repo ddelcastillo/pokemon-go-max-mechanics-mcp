@@ -10,10 +10,11 @@ from src.infrastructure.dependency_injection.modules.pokemon_data_module import 
 
 
 def create_injector() -> Injector:
-    """Create and configure the main injector instance.
-
+    """
+    Create and configure the application's main dependency injector.
+    
     Returns:
-        Configured injector instance with all modules.
+        Injector: An Injector instance pre-configured with HTTP client, image service, and Pokémon data modules.
     """
     return Injector(modules=[HttpClientModule(), ImageServiceModule(), PokemonDataModule()])
 

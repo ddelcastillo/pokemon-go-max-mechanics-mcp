@@ -15,7 +15,9 @@ class TestPokemonGoApp(unittest.TestCase):
     @patch("tkinter.Frame")
     @patch("tkinter.Tk")
     def setUp(self, mock_tk_class: Mock, mock_frame_class: Mock, mock_label_class: Mock, mock_injector: Mock) -> None:
-        """Set up test fixtures."""
+        """
+        Prepare the test environment by mocking Tkinter components and dependencies for the PokemonGoApp instance.
+        """
         # Mock the root window
         self.mock_root = MagicMock()
         self.mock_root.winfo_screenwidth.return_value = 1920

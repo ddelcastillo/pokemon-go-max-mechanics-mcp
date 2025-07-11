@@ -14,7 +14,9 @@ class TestPokemonGoApiAdapter:
     """Test suite for PokemonGoApiAdapter."""
 
     def setup_method(self) -> None:
-        """Set up test fixtures."""
+        """
+        Initializes a mock HTTP client and creates a `PokemonGoApiAdapter` instance for use in each test.
+        """
         self.mock_http_client = Mock(spec=HttpClientPort)
         # Mock the context manager behavior
         self.mock_http_client.__enter__ = Mock(return_value=self.mock_http_client)
@@ -23,7 +25,9 @@ class TestPokemonGoApiAdapter:
         self.adapter = PokemonGoApiAdapter(http_client=self.mock_http_client)
 
     def test_fetch_pokemon_data_success(self) -> None:
-        """Test successful Pokemon data fetch from API."""
+        """
+        Test that fetch_pokemon_data returns correct data when the API responds successfully with valid Pokémon information.
+        """
         # Mock pokedex response - raw API response
         pokedex_data: PokemonDict = {
             "dexNr": 25,
@@ -47,7 +51,11 @@ class TestPokemonGoApiAdapter:
         assert self.mock_http_client.get.call_count == 1
 
     def test_fetch_pokemon_data_not_found(self) -> None:
-        """Test Pokemon data fetch when Pokemon is not found."""
+        """
+        Test that fetch_pokemon_data raises a ValueError when the API indicates the Pokémon is not found.
+        
+        Verifies that an exception from the HTTP client results in a ValueError with the expected error message.
+        """
         # Mock HTTP client to raise an exception (Pokemon not found)
         self.mock_http_client.get.side_effect = Exception("HTTP 404: Not Found")
 
@@ -59,7 +67,9 @@ class TestPokemonGoApiAdapter:
             assert "Error fetching Pokemon data from API: Status code unknown" in str(e)
 
     def test_fetch_pokemon_data_invalid_response(self) -> None:
-        """Test Pokemon data fetch with invalid response format."""
+        """
+        Test that fetch_pokemon_data raises a ValueError when the API response is not a dictionary.
+        """
         # Mock invalid response (not a dict)
         self.mock_http_client.get.return_value = "invalid response"
 
@@ -71,7 +81,11 @@ class TestPokemonGoApiAdapter:
             assert "Expected dictionary response" in str(e)
 
     def test_fetch_pokemon_data_missing_required_fields(self) -> None:
-        """Test Pokemon data fetch with missing required fields."""
+        """
+        Test that fetching Pokemon data with a response missing required fields raises a ValueError.
+        
+        Verifies that if the API response lacks mandatory fields such as 'dexNr' and 'names', the adapter raises a ValueError indicating an invalid response format.
+        """
         # Mock response missing required fields
         pokedex_data = {"id": "TEST_POKEMON"}  # Missing dexNr and names
 
@@ -97,7 +111,9 @@ class TestPokemonGoApiAdapter:
             assert "Pokemon 'TESTPOKEMON' not found" in str(e)
 
     def test_fetch_pokemon_data_uppercase_conversion(self) -> None:
-        """Test that Pokemon names are converted to uppercase for API calls."""
+        """
+        Verify that the adapter converts the Pokémon name to uppercase before making the API call and returns the correct data.
+        """
         # Mock successful response
         pokedex_data: PokemonDict = {
             "dexNr": 1,
@@ -116,7 +132,9 @@ class TestPokemonGoApiAdapter:
         self.mock_http_client.get.assert_called_once_with(url=expected_url)
 
     def test_fetch_pokemon_data_complete_response(self) -> None:
-        """Test Pokemon data fetch with complete API response."""
+        """
+        Tests that fetch_pokemon_data returns the complete API response unchanged when all expected fields are present for a Pokémon.
+        """
         # Mock complete pokedex response
         pokedex_data: PokemonDict = {
             "dexNr": 150,

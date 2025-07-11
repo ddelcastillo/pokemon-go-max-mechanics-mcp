@@ -51,13 +51,10 @@ class PokedexView(BaseView):
         image_service: WebImageProcessingService,
         fetch_pokemon_use_case: FetchPokemonUseCase,
     ) -> None:
-        """Initialize the Pokédex view.
-
-        Args:
-            parent: The parent widget.
-            navigator: The view navigator for navigation and status updates.
-            image_service: Service for handling Pokemon image operations.
-            fetch_pokemon_use_case: Use case for fetching Pokemon data.
+        """
+        Initialize a new Pokédex view for searching and displaying Pokémon GO data.
+        
+        Creates the UI components and sets up dependencies for navigation, image processing, and asynchronous Pokémon data fetching.
         """
         super().__init__(parent=parent, navigator=navigator)
         self.image_service = image_service
@@ -98,7 +95,11 @@ class PokedexView(BaseView):
         title_label.pack(pady=(20, 30))
 
     def _create_search_section(self) -> None:
-        """Create the search input and buttons section."""
+        """
+        Create the UI section containing the Pokémon name input field and search button.
+        
+        This section includes a label prompting for input, an entry widget for typing the Pokémon name, and a button to initiate the search. The entry widget also binds the Enter key to trigger the search action.
+        """
         if not self.frame:
             return
         search_frame = Frame(self.frame)
@@ -115,7 +116,9 @@ class PokedexView(BaseView):
         self.search_button.pack(side=PACK_SIDE_LEFT, padx=(0, 5))
 
     def _create_content_section(self) -> None:
-        """Create the main content section with image and results."""
+        """
+        Create the main content section of the view, including the Pokémon image display and results area.
+        """
         if not self.frame:
             return
         # Content frame - don't expand fully to leave room for navigation.
@@ -126,10 +129,11 @@ class PokedexView(BaseView):
         self._create_results_section(parent=content_frame)
 
     def _create_image_section(self, *, parent: Frame) -> None:
-        """Create the image display section.
-
-        Args:
-            parent: The parent frame to contain the image section.
+        """
+        Creates and adds the Pokémon base and shiny image display sections to the given parent frame.
+        
+        Parameters:
+            parent (Frame): The parent frame to which the image section is added.
         """
         image_frame = Frame(parent)
         image_frame.pack(side=PACK_SIDE_LEFT, fill=PACK_FILL_Y, padx=(0, 20))
@@ -149,10 +153,11 @@ class PokedexView(BaseView):
         self.shiny_image_label.pack(expand=True, fill=PACK_FILL_BOTH)
 
     def _create_results_section(self, *, parent: Frame) -> None:
-        """Create the search results display section.
-
-        Args:
-            parent: The parent frame to contain the results section.
+        """
+        Create and add the scrollable text area for displaying Pokémon search results.
+        
+        Parameters:
+        	parent (Frame): The parent frame that will contain the results section.
         """
         results_frame = Frame(parent)
         results_frame.pack(side=PACK_SIDE_LEFT, fill=PACK_FILL_BOTH, expand=True)
@@ -169,7 +174,9 @@ class PokedexView(BaseView):
         self.result_text.pack(fill=PACK_FILL_BOTH, expand=True)
 
     def _create_navigation_section(self) -> None:
-        """Create the navigation section with back button."""
+        """
+        Create the navigation section containing a back button for returning to the main menu.
+        """
         if not self.frame:
             return
         nav_frame = Frame(self.frame)
@@ -186,7 +193,11 @@ class PokedexView(BaseView):
         self._on_search_click()
 
     def _on_search_click(self) -> None:
-        """Handle search button click."""
+        """
+        Initiates a Pokémon search when the search button is clicked.
+        
+        Validates the input, cancels any ongoing searches or image fetches, clears previous images, and starts a new background thread to fetch Pokémon data based on the entered name. Displays an error if the input is empty.
+        """
         if not self.search_entry:
             return
         if not (pokemon_name := self.search_entry.get().strip().lower()):
@@ -230,11 +241,12 @@ class PokedexView(BaseView):
             self.navigator.update_status(message=f"Base image loaded for {pokemon_name.title()}!")
 
     def _display_pokemon_shiny_image(self, *, image: ProcessedImage, pokemon_name: str) -> None:
-        """Display the Pokemon shiny image in the UI.
-
-        Args:
-            image: The processed image to display.
-            pokemon_name: The name of the Pokemon for the image.
+        """
+        Displays the shiny variant image of a Pokémon in the UI and updates the status message.
+        
+        Parameters:
+            image (ProcessedImage): The processed shiny image to display.
+            pokemon_name (str): The name of the Pokémon whose shiny image is shown.
         """
         if self.shiny_image_label:
             # Type ignore needed because ProcessedImage protocol doesn't satisfy tkinter's
@@ -279,10 +291,11 @@ class PokedexView(BaseView):
                 delattr(self.shiny_image_label, IMAGE)
 
     def _on_base_image_success(self, image: ProcessedImage) -> None:
-        """Handle successful base image loading from the service.
-
-        Args:
-            image: The processed image ready for display.
+        """
+        Handles successful loading of the base Pokémon image by scheduling its display in the UI thread.
+        
+        Parameters:
+            image (ProcessedImage): The processed image to display as the base Pokémon image.
         """
         # This callback is called from a background thread, so we need to use frame.after.
         # Use the stored pokemon name for display.
@@ -291,20 +304,22 @@ class PokedexView(BaseView):
             self.frame.after(0, lambda: self._display_pokemon_base_image(image=image, pokemon_name=pokemon_name))
 
     def _on_base_image_error(self, error_message: str) -> None:
-        """Handle base image loading error from the service.
-
-        Args:
-            error_message: The error message from the service.
+        """
+        Handles errors encountered while loading the base Pokémon image by scheduling an error display update on the UI thread.
+        
+        Parameters:
+            error_message (str): The error message describing the image loading failure.
         """
         # This callback is called from a background thread, so we need to use frame.after.
         if self.frame:
             self.frame.after(0, lambda: self._show_base_image_error(error_message))
 
     def _on_shiny_image_success(self, image: ProcessedImage) -> None:
-        """Handle successful shiny image loading from the service.
-
-        Args:
-            image: The processed image ready for display.
+        """
+        Handles the successful retrieval of a shiny Pokémon image and schedules its display in the UI.
+        
+        Parameters:
+        	image (ProcessedImage): The processed shiny image to display.
         """
         # This callback is called from a background thread, so we need to use frame.after.
         # Use the stored pokemon name for display.
@@ -313,20 +328,22 @@ class PokedexView(BaseView):
             self.frame.after(0, lambda: self._display_pokemon_shiny_image(image=image, pokemon_name=pokemon_name))
 
     def _on_shiny_image_error(self, error_message: str) -> None:
-        """Handle shiny image loading error from the service.
-
-        Args:
-            error_message: The error message from the service.
+        """
+        Handles errors that occur while loading the shiny Pokémon image by scheduling an error display update on the UI thread.
+        
+        Parameters:
+            error_message (str): The error message describing the image loading failure.
         """
         # This callback is called from a background thread, so we need to use frame.after.
         if self.frame:
             self.frame.after(0, lambda: self._show_shiny_image_error(error_message))
 
     def _search_pokemon_thread(self, pokemon_name: str) -> None:
-        """Search for Pokémon GO data using the fetch Pokemon use case.
-
-        Args:
-            pokemon_name: The name of the Pokémon to search for.
+        """
+        Initiates an asynchronous search for Pokémon GO data by name and manages callbacks for result handling.
+        
+        Parameters:
+            pokemon_name (str): The name of the Pokémon to search for.
         """
         self._current_search_thread = self.fetch_pokemon_use_case.fetch_pokemon_data_async(
             pokemon_name=pokemon_name,
@@ -338,10 +355,11 @@ class PokedexView(BaseView):
         )
 
     def _on_pokemon_data_success(self, data: dict) -> None:
-        """Handle successful data retrieval from the service.
-
-        Args:
-            data: The retrieved data.
+        """
+        Handles successful retrieval of Pokémon data by displaying results, updating status, and initiating image fetches for base and shiny forms.
+        
+        Parameters:
+            data (dict): The Pokémon data retrieved from the service.
         """
         if self.frame:
             self.frame.after(0, lambda: self._display_results(results=json.dumps(data, indent=2, ensure_ascii=False)))
@@ -357,11 +375,12 @@ class PokedexView(BaseView):
                 self._fetch_pokemon_shiny_image(image_url=shiny_image_url, pokemon_name=pokemon_name)
 
     def _fetch_pokemon_base_image(self, *, image_url: str, pokemon_name: str) -> None:
-        """Fetch Pokemon base image using the image service.
-
-        Args:
-            image_url: The URL of the image to fetch.
-            pokemon_name: The name of the Pokemon.
+        """
+        Initiate asynchronous fetching of a Pokémon's base image and handle the result via callbacks.
+        
+        Parameters:
+            image_url (str): URL of the Pokémon's base image.
+            pokemon_name (str): Name of the Pokémon whose image is being fetched.
         """
         # Store the pokemon name for use in the callback.
         self._current_pokemon_name = pokemon_name
@@ -374,11 +393,12 @@ class PokedexView(BaseView):
         )
 
     def _fetch_pokemon_shiny_image(self, *, image_url: str, pokemon_name: str) -> None:
-        """Fetch Pokemon shiny image using the image service.
-
-        Args:
-            image_url: The URL of the image to fetch.
-            pokemon_name: The name of the Pokemon.
+        """
+        Initiate asynchronous fetching of a Pokémon's shiny image using the image service.
+        
+        Parameters:
+            image_url (str): URL of the shiny image to fetch.
+            pokemon_name (str): Name of the Pokémon whose shiny image is being fetched.
         """
         # Store the pokemon name for use in the callback.
         self._current_pokemon_name = pokemon_name
@@ -447,7 +467,9 @@ class PokedexView(BaseView):
         self.navigator.update_status(message="Search failed.")
 
     def _on_back_click(self) -> None:
-        """Handle back button click."""
+        """
+        Handles the back button click by canceling ongoing searches and image fetches, then navigates to the main menu view.
+        """
         self._cancel_current_search()
         self._cancel_current_image_searches()
         self.navigator.navigate_to(view_name=MAIN_MENU_VIEW)
@@ -459,7 +481,9 @@ class PokedexView(BaseView):
             self.search_entry.focus_set()
 
     def on_destroy(self) -> None:
-        """Called when the view is destroyed."""
+        """
+        Performs cleanup when the view is destroyed by canceling ongoing search and image fetch operations before invoking the superclass destroy method.
+        """
         self._cancel_current_search()
         self._cancel_current_image_searches()
         super().on_destroy()

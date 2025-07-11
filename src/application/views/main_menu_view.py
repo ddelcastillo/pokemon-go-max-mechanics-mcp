@@ -29,7 +29,11 @@ class MainMenuView(BaseView):
         super().__init__(parent=parent, navigator=navigator)
 
     def create_widgets(self) -> None:
-        """Create and layout the main menu widgets."""
+        """
+        Create and arrange the main menu labels and buttons within the view.
+        
+        This method adds the title, subtitle, and three menu buttons to the main menu interface. The "Pokédex API" button is enabled and linked to its handler, while the other two buttons are displayed but disabled.
+        """
         if not self.frame:
             return
 

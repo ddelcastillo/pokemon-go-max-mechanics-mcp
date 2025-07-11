@@ -126,9 +126,10 @@ class BaseView:
         self.on_hide()
 
     def destroy(self) -> None:
-        """Destroy the view and clean up resources.
-
-        Destroys the frame and calls the on_destroy hook. Safe to call multiple times.
+        """
+        Destroys the view's frame and performs cleanup.
+        
+        Safe to call multiple times; ignores errors if the frame is already destroyed. Invokes the `on_destroy` hook after cleanup.
         """
         if self.frame:
             try:

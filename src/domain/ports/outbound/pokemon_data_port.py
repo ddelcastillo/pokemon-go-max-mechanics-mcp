@@ -20,15 +20,16 @@ class PokemonDataPort[T](ABC):
 
     @abstractmethod
     def fetch_pokemon_data(self, *, pokemon_name: str) -> T:
-        """Fetch Pokemon data by name.
-
-        Args:
-            pokemon_name: The name of the Pokemon to fetch data for.
-
+        """
+        Retrieve data for a specified Pokemon by its name.
+        
+        Parameters:
+            pokemon_name (str): The name of the Pokemon to retrieve.
+        
         Returns:
-            Pokemon data of type T.
-
+            T: Data associated with the specified Pokemon.
+        
         Raises:
-            ValueError: If Pokemon is not found or if there's an error fetching data.
+            ValueError: If the Pokemon is not found or if an error occurs during data retrieval.
         """
         pass
