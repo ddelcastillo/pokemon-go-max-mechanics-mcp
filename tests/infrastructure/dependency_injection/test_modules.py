@@ -13,7 +13,7 @@ class TestHttpClientModule:
         """Test that the module properly binds HttpClientPort."""
         injector = Injector(modules=[HttpClientModule()])
 
-        http_client = injector.get(HttpClientPort)
+        http_client = injector.get(HttpClientPort)  # type: ignore[type-abstract]
 
         assert isinstance(http_client, HttpxClientAdapter)
 
@@ -21,7 +21,7 @@ class TestHttpClientModule:
         """Test that HttpClientPort is bound as singleton."""
         injector = Injector(modules=[HttpClientModule()])
 
-        http_client1 = injector.get(HttpClientPort)
-        http_client2 = injector.get(HttpClientPort)
+        http_client1 = injector.get(HttpClientPort)  # type: ignore[type-abstract]
+        http_client2 = injector.get(HttpClientPort)  # type: ignore[type-abstract]
 
         assert http_client1 is http_client2

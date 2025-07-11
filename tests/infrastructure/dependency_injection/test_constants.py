@@ -1,6 +1,6 @@
 """Tests for dependency injection constants."""
 
-from src.application.constants.api_constants import (
+from src.infrastructure.constants.api_constants import (
     DEFAULT_HTTP_TIMEOUT,
     POKEMON_GO_API_BASE_URL,
 )

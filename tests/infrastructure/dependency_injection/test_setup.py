@@ -13,13 +13,13 @@ class TestInjectorSetup:
         """Test that create_injector returns a properly configured injector."""
         test_injector = create_injector()
 
-        http_client = test_injector.get(HttpClientPort)
+        http_client = test_injector.get(HttpClientPort)  # type: ignore[type-abstract]
 
         assert isinstance(http_client, HttpxClientAdapter)
 
     def test_global_injector_is_configured(self) -> None:
         """Test that the global injector instance is properly configured."""
-        http_client = injector.get(HttpClientPort)
+        http_client = injector.get(HttpClientPort)  # type: ignore[type-abstract]
 
         assert isinstance(http_client, HttpxClientAdapter)
 
@@ -40,7 +40,11 @@ class TestInjectorSetup:
 
         @inject
         def test_function(*, http_client: HttpClientPort) -> str:
-            return f"Timeout: {http_client._timeout}"
+            # Cast to concrete type to access private attributes
+            from typing import cast
+
+            concrete_client = cast(HttpxClientAdapter, http_client)
+            return f"Timeout: {concrete_client._timeout}"
 
         result = injector.call_with_injection(test_function, kwargs={"http_client": custom_client})
 

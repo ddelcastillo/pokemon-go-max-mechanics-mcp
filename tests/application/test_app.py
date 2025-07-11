@@ -14,7 +14,7 @@ class TestPokemonGoApp(unittest.TestCase):
     @patch("tkinter.Label")
     @patch("tkinter.Frame")
     @patch("tkinter.Tk")
-    def setUp(self, mock_tk_class, mock_frame_class, mock_label_class, mock_injector) -> None:
+    def setUp(self, mock_tk_class: Mock, mock_frame_class: Mock, mock_label_class: Mock, mock_injector: Mock) -> None:
         """Set up test fixtures."""
         # Mock the root window
         self.mock_root = MagicMock()
