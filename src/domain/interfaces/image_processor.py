@@ -14,9 +14,6 @@ class ProcessedImage(Protocol):
     to avoid leaking infrastructure concerns into the domain and application layers.
     """
 
-    # This protocol doesn't define specific methods since the actual usage
-    # is handled by the UI framework. The important part is type safety.
-
 
 class ImageProcessor(ABC):
     """Abstract interface for image processing operations."""

@@ -10,6 +10,7 @@ from typing import Final
 POKEMON_GO_API_BASE_URL: Final[str] = "https://pokemon-go-api.github.io/pokemon-go-api/api"
 
 # Pokemon GO API keys.
+# TODO: these should only be used in the adapter! Move to domain constants when standardized.
 POKEMON_IMAGE_KEY: Final[str] = "image"
 POKEMON_SHINY_IMAGE_KEY: Final[str] = "shinyImage"
 POKEMON_ASSETS_KEY: Final[str] = "assets"

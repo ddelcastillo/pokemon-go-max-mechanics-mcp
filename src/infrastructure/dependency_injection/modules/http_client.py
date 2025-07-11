@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 from injector import Module, provider, singleton
 
-from src.application.constants.api_constants import DEFAULT_HTTP_TIMEOUT
 from src.domain.ports.outbound.http_client_port import HttpClientPort
 from src.infrastructure.adapters.outbound.httpx_client_adapter import HttpxClientAdapter
+from src.infrastructure.constants.api_constants import DEFAULT_HTTP_TIMEOUT
 
 if TYPE_CHECKING:
     from injector import Binder

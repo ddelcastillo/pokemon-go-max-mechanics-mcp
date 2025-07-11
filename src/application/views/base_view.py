@@ -134,7 +134,7 @@ class BaseView:
             try:
                 self.frame.destroy()
             except TclError:
-                # Frame already destroyed, ignore
+                # Frame already destroyed, ignore.
                 pass
             finally:
                 self.frame = None

@@ -2,6 +2,7 @@
 
 import tkinter as tk
 import unittest
+from tkinter.ttk import Widget
 from unittest.mock import Mock
 
 from src.application.views.base_view import BaseView, ViewNavigator
@@ -10,7 +11,7 @@ from src.application.views.base_view import BaseView, ViewNavigator
 class MockTestView(BaseView):
     """Test implementation of BaseView."""
 
-    def __init__(self, *, parent: tk.Widget, navigator: ViewNavigator) -> None:
+    def __init__(self, *, parent: Widget, navigator: ViewNavigator) -> None:
         """Initialize test view."""
         super().__init__(parent=parent, navigator=navigator)
         self.widgets_created = False
@@ -29,8 +30,12 @@ class TestBaseView(unittest.TestCase):
     def setUp(self) -> None:
         """Set up test fixtures."""
         self.root = tk.Tk()
+        # Create a ttk Frame as the parent to match the expected Widget type
+        from tkinter.ttk import Frame
+
+        self.parent_frame = Frame(self.root)
         self.navigator = Mock(spec=ViewNavigator)
-        self.view = MockTestView(parent=self.root, navigator=self.navigator)
+        self.view = MockTestView(parent=self.parent_frame, navigator=self.navigator)
 
     def tearDown(self) -> None:
         """Clean up test fixtures."""
@@ -39,7 +44,7 @@ class TestBaseView(unittest.TestCase):
 
     def test_initialization(self) -> None:
         """Test view initialization."""
-        self.assertEqual(self.view.parent, self.root)
+        self.assertEqual(self.view.parent, self.parent_frame)
         self.assertEqual(self.view.navigator, self.navigator)
         self.assertIsNone(self.view.frame)
 
@@ -74,7 +79,8 @@ class TestBaseView(unittest.TestCase):
 
         # Mock the pack_forget method to track calls
         pack_forget_mock = Mock()
-        self.view.frame.pack_forget = pack_forget_mock
+        if self.view.frame:
+            self.view.frame.pack_forget = pack_forget_mock  # type: ignore[method-assign]
 
         self.view.hide()
 
@@ -92,9 +98,9 @@ class TestBaseView(unittest.TestCase):
     def test_lifecycle_callbacks(self) -> None:
         """Test that lifecycle callbacks are called."""
         # Mock the callback methods
-        self.view.on_show = Mock()
-        self.view.on_hide = Mock()
-        self.view.on_destroy = Mock()
+        self.view.on_show = Mock()  # type: ignore[method-assign]
+        self.view.on_hide = Mock()  # type: ignore[method-assign]
+        self.view.on_destroy = Mock()  # type: ignore[method-assign]
 
         # Test show callback
         self.view.show()

@@ -11,7 +11,7 @@ from src.application.views.base_view import BaseView, ViewNavigator
 class MainMenuView(BaseView):
     """Main menu view with navigation options."""
 
-    # Application-specific text constants
+    # Application-specific text constants.
     TITLE_TEXT: Final[str] = "Max Mechanics"
     SUBTITLE_TEXT: Final[str] = "Choose an option to explore:"
 
@@ -41,7 +41,7 @@ class MainMenuView(BaseView):
         subtitle_label = Label(self.frame, text=self.SUBTITLE_TEXT)
         subtitle_label.pack(pady=(0, 40))
 
-        # Menu buttons container
+        # Menu buttons container.
         buttons_frame = Frame(self.frame)
         buttons_frame.pack(expand=True)
 
@@ -51,12 +51,13 @@ class MainMenuView(BaseView):
         )
         team_builder_button.pack(pady=10)
 
-        # Max Mechanics button (disabled for now)
+        # Max Mechanics button (disabled for now).
         max_mechanics_button = Button(
             buttons_frame, text=self.MAX_MECHANICS_BUTTON_TEXT, width=BUTTON_WIDTH, state="disabled"
         )
         max_mechanics_button.pack(pady=10)
-        # Pokédex button
+
+        # Pokédex button.
         pokedex_button = Button(
             buttons_frame, text=self.POKEDEX_BUTTON_TEXT, width=BUTTON_WIDTH, command=self._on_pokedex_click
         )
