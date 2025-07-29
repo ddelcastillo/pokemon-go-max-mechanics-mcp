@@ -1,13 +1,13 @@
-"""Tests for dependency injection constants."""
+"""Tests for API constants."""
 
-from src.application.constants.api_constants import (
+from src.infrastructure.constants.api_constants import (
     DEFAULT_HTTP_TIMEOUT,
     POKEMON_GO_API_BASE_URL,
 )
 
 
-class TestConstants:
-    """Test suite for dependency injection constants."""
+class TestApiConstants:
+    """Test suite for API constants."""
 
     def test_pokemon_go_api_base_url_is_defined(self) -> None:
         """Test that the Pokémon GO API base URL is properly defined."""

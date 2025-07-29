@@ -29,7 +29,7 @@ This is a passion project that combines Pokémon Go strategy optimization with t
    ```bash
    # Install project dependencies
    uv sync
-   
+
    # Install development dependencies
    uv sync --group code-quality --group test
    ```

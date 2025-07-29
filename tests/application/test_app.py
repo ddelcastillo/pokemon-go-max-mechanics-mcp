@@ -1,5 +1,3 @@
-"""Tests for the main application controller."""
-
 import tkinter as tk
 import unittest
 from unittest.mock import MagicMock, Mock, call, patch
@@ -14,7 +12,7 @@ class TestPokemonGoApp(unittest.TestCase):
     @patch("tkinter.Label")
     @patch("tkinter.Frame")
     @patch("tkinter.Tk")
-    def setUp(self, mock_tk_class, mock_frame_class, mock_label_class, mock_injector) -> None:
+    def setUp(self, mock_tk_class: Mock, mock_frame_class: Mock, mock_label_class: Mock, mock_injector: Mock) -> None:
         """Set up test fixtures."""
         # Mock the root window
         self.mock_root = MagicMock()
@@ -40,9 +38,7 @@ class TestPokemonGoApp(unittest.TestCase):
 
     def test_initialization(self) -> None:
         """Test application initialization."""
-        # Verify window setup was called
         self.mock_root.title.assert_called_with("Pokémon Go Max Mechanics")
-        # Check that geometry was called with the window size and position
         geometry_calls = self.mock_root.geometry.call_args_list
         self.assertTrue(any("900x700" in str(call) for call in geometry_calls))
         self.mock_root.resizable.assert_called_with(width=True, height=True)
@@ -50,17 +46,14 @@ class TestPokemonGoApp(unittest.TestCase):
 
     def test_navigate_to_valid_view(self) -> None:
         """Test navigation to a valid view."""
-        # Mock views
         mock_old_view = Mock()
         mock_new_view = Mock()
 
         self.app.views = {"old_view": mock_old_view, "new_view": mock_new_view}
         self.app.current_view = mock_old_view
 
-        # Navigate to new view
         self.app.navigate_to(view_name="new_view")
 
-        # Verify old view was hidden and new view was shown
         mock_old_view.hide.assert_called_once()
         mock_new_view.show.assert_called_once()
         self.assertEqual(self.app.current_view, mock_new_view)
@@ -69,10 +62,8 @@ class TestPokemonGoApp(unittest.TestCase):
         """Test navigation to an invalid view."""
         self.app.views = {}
 
-        # Navigate to invalid view
         self.app.navigate_to(view_name="nonexistent_view")
 
-        # Verify error status was set
         self.mock_label.config.assert_called_with(text="Error: View 'nonexistent_view' not found.")
 
     def test_update_status_with_label(self) -> None:
@@ -91,10 +82,8 @@ class TestPokemonGoApp(unittest.TestCase):
 
         self.app.cleanup()
 
-        # Verify all views were destroyed
         mock_view1.destroy.assert_called_once()
         mock_view2.destroy.assert_called_once()
 
-        # Verify state was reset
         self.assertEqual(self.app.views, {})
         self.assertIsNone(self.app.current_view)

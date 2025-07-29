@@ -1,6 +1,8 @@
-"""Main entry point for the Pokémon Go Max Mechanics application."""
+import logging
 
 from src.application.app import PokemonGoApp
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -10,9 +12,9 @@ def main() -> None:
     try:
         app.run()
     except KeyboardInterrupt:
-        print("Application interrupted by user.")
+        logger.info("Application interrupted by user.")
     except Exception as e:
-        print(f"Application error: {e}")
+        logger.error(f"Application error: {e}")
     finally:
         app.cleanup()
 

@@ -1,5 +1,3 @@
-"""Tests for the PIL Image Processor Service."""
-
 import unittest
 from unittest.mock import Mock, patch
 
@@ -14,22 +12,17 @@ class TestPILImageProcessor(unittest.TestCase):
     def setUp(self) -> None:
         """Set up test fixtures."""
         self.service = PILImageProcessor()
-
-        # Mock callbacks
         self.mock_on_success = Mock()
         self.mock_on_error = Mock()
         self.mock_on_started = Mock()
         self.mock_on_finished = Mock()
         self.mock_cancellation_check = Mock(return_value=False)
-
-        # Test data
         self.test_image_data = b"fake_image_data"
 
     def test_initialization(self) -> None:
         """Test that the service initializes correctly."""
         service = PILImageProcessor()
 
-        # Service should initialize without any dependencies
         self.assertIsInstance(service, PILImageProcessor)
 
     @patch("threading.Thread")
@@ -47,12 +40,10 @@ class TestPILImageProcessor(unittest.TestCase):
             cancellation_check=self.mock_cancellation_check,
         )
 
-        # Verify thread was created and started
         mock_thread.assert_called_once()
         mock_thread_instance.start.assert_called_once()
         self.assertIs(result, mock_thread_instance)
 
-        # Verify it's a daemon thread
         _, kwargs = mock_thread.call_args
         self.assertTrue(kwargs["daemon"])
 
@@ -60,7 +51,6 @@ class TestPILImageProcessor(unittest.TestCase):
     @patch("src.infrastructure.services.pil_image_processor.ImageTk.PhotoImage")
     def test_download_and_process_image_success(self, mock_photo_image: Mock, mock_image: Mock) -> None:
         """Test successful image processing."""
-        # Mock PIL image processing
         mock_pil_image = Mock()
         mock_pil_image.mode = "RGB"
         mock_converted_image = Mock()
@@ -73,7 +63,6 @@ class TestPILImageProcessor(unittest.TestCase):
 
         result = self.service._download_and_process_image(image_data=self.test_image_data)
 
-        # Verify image processing steps
         mock_image.open.assert_called_once()
         mock_pil_image.convert.assert_called_once_with("RGBA")
         mock_photo_image.assert_called_once_with(mock_converted_image)
@@ -83,7 +72,6 @@ class TestPILImageProcessor(unittest.TestCase):
     @patch("src.infrastructure.services.pil_image_processor.Image")
     def test_download_and_process_image_with_rgba_mode(self, mock_image: Mock) -> None:
         """Test image processing when image is already in RGBA mode."""
-        # Mock PIL image already in RGBA mode
         mock_pil_image = Mock()
         mock_pil_image.mode = "RGBA"
 
@@ -96,9 +84,7 @@ class TestPILImageProcessor(unittest.TestCase):
 
             result = self.service._download_and_process_image(image_data=self.test_image_data)
 
-            # Verify image processing steps
             mock_image.open.assert_called_once()
-            # Should not convert since it's already RGBA
             mock_pil_image.convert.assert_not_called()
             mock_photo_image.assert_called_once_with(mock_pil_image)
 
@@ -129,7 +115,6 @@ class TestPILImageProcessor(unittest.TestCase):
                 cancellation_check=self.mock_cancellation_check,
             )
 
-            # Verify method calls
             self.mock_on_started.assert_called_once()
             mock_download.assert_called_once_with(image_data=self.test_image_data)
             self.mock_on_success.assert_called_once_with(mock_processed_image)
@@ -157,7 +142,6 @@ class TestPILImageProcessor(unittest.TestCase):
 
     def test_fetch_image_thread_early_cancellation(self) -> None:
         """Test early cancellation before image processing."""
-        # Mock cancellation to return True immediately
         self.mock_cancellation_check.return_value = True
 
         with patch.object(self.service, "_download_and_process_image") as mock_download:
@@ -185,7 +169,6 @@ class TestPILImageProcessor(unittest.TestCase):
 
             result = self.service.fetch_image_sync(image_data=self.test_image_data)
 
-            # Verify delegation to download method
             mock_download.assert_called_once_with(image_data=self.test_image_data)
             self.assertIs(result, mock_processed_image)
 
@@ -198,7 +181,6 @@ class TestPILImageProcessor(unittest.TestCase):
             self.service.fetch_image_sync(image_data=self.test_image_data)
 
 
-# Pytest-style parametrized test (separate from unittest class)
 @pytest.mark.parametrize("image_data", [b"fake_image_data", b"another_image_data", b"third_image_data"])
 def test_fetch_image_sync_with_different_data_parametrized(image_data: bytes) -> None:
     """Test synchronous method with different image data using pytest parametrization."""
@@ -212,7 +194,3 @@ def test_fetch_image_sync_with_different_data_parametrized(image_data: bytes) ->
 
         mock_download.assert_called_once_with(image_data=image_data)
         assert result is mock_processed_image
-
-
-if __name__ == "__main__":
-    unittest.main()

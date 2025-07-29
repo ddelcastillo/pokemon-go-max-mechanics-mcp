@@ -4,8 +4,8 @@ from src.infrastructure.dependency_injection.modules.http_client import HttpClie
 from src.infrastructure.dependency_injection.modules.image_service import (
     ImageServiceModule,
 )
-from src.infrastructure.dependency_injection.modules.pokemon_go_api_service import (
-    PokemonGoApiServiceModule,
+from src.infrastructure.dependency_injection.modules.pokemon_data_module import (
+    PokemonDataModule,
 )
 
 
@@ -15,7 +15,7 @@ def create_injector() -> Injector:
     Returns:
         Configured injector instance with all modules.
     """
-    return Injector(modules=[HttpClientModule(), ImageServiceModule(), PokemonGoApiServiceModule()])
+    return Injector(modules=[HttpClientModule(), ImageServiceModule(), PokemonDataModule()])
 
 
 # Global injector instance

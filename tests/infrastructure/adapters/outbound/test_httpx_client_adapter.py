@@ -40,7 +40,6 @@ class TestHttpxClientAdapter:
             mock_client = AsyncMock()
             mock_client_class.return_value = mock_client
 
-            # Create a regular Mock for the response since httpx.Response methods are sync
             mock_response = Mock()
             mock_response.json.return_value = mock_response_data
             mock_response.raise_for_status.return_value = None

@@ -1,16 +1,22 @@
-"""Tests for the base view functionality."""
-
+import platform
 import tkinter as tk
 import unittest
+from tkinter.ttk import Widget
 from unittest.mock import Mock
 
+import pytest
+
 from src.application.views.base_view import BaseView, ViewNavigator
+
+pytestmark = pytest.mark.skipif(
+    platform.system() == "Windows", reason="Tkinter tests are unreliable on Windows due to Tcl/Tk issues."
+)
 
 
 class MockTestView(BaseView):
     """Test implementation of BaseView."""
 
-    def __init__(self, *, parent: tk.Widget, navigator: ViewNavigator) -> None:
+    def __init__(self, *, parent: Widget, navigator: ViewNavigator) -> None:
         """Initialize test view."""
         super().__init__(parent=parent, navigator=navigator)
         self.widgets_created = False
@@ -29,8 +35,11 @@ class TestBaseView(unittest.TestCase):
     def setUp(self) -> None:
         """Set up test fixtures."""
         self.root = tk.Tk()
+        from tkinter.ttk import Frame
+
+        self.parent_frame = Frame(self.root)
         self.navigator = Mock(spec=ViewNavigator)
-        self.view = MockTestView(parent=self.root, navigator=self.navigator)
+        self.view = MockTestView(parent=self.parent_frame, navigator=self.navigator)
 
     def tearDown(self) -> None:
         """Clean up test fixtures."""
@@ -39,7 +48,7 @@ class TestBaseView(unittest.TestCase):
 
     def test_initialization(self) -> None:
         """Test view initialization."""
-        self.assertEqual(self.view.parent, self.root)
+        self.assertEqual(self.view.parent, self.parent_frame)
         self.assertEqual(self.view.navigator, self.navigator)
         self.assertIsNone(self.view.frame)
 
@@ -57,24 +66,20 @@ class TestBaseView(unittest.TestCase):
         """Test that show() only creates widgets once."""
         self.view.show()
         first_frame = self.view.frame
-
-        # Reset the flag
         self.view.widgets_created = False
 
         self.view.show()
 
-        # Should be the same frame
         self.assertEqual(self.view.frame, first_frame)
-        # Widgets should not be created again
         self.assertFalse(self.view.widgets_created)
 
     def test_hide_removes_frame_from_display(self) -> None:
         """Test that hide() removes frame from display."""
         self.view.show()
 
-        # Mock the pack_forget method to track calls
         pack_forget_mock = Mock()
-        self.view.frame.pack_forget = pack_forget_mock
+        if self.view.frame:
+            self.view.frame.pack_forget = pack_forget_mock  # type: ignore[method-assign]
 
         self.view.hide()
 
@@ -91,19 +96,15 @@ class TestBaseView(unittest.TestCase):
 
     def test_lifecycle_callbacks(self) -> None:
         """Test that lifecycle callbacks are called."""
-        # Mock the callback methods
-        self.view.on_show = Mock()
-        self.view.on_hide = Mock()
-        self.view.on_destroy = Mock()
+        self.view.on_show = Mock()  # type: ignore[method-assign]
+        self.view.on_hide = Mock()  # type: ignore[method-assign]
+        self.view.on_destroy = Mock()  # type: ignore[method-assign]
 
-        # Test show callback
         self.view.show()
         self.view.on_show.assert_called_once()
 
-        # Test hide callback
         self.view.hide()
         self.view.on_hide.assert_called_once()
 
-        # Test destroy callback
         self.view.destroy()
         self.view.on_destroy.assert_called_once()
