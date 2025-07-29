@@ -126,6 +126,11 @@ dmypy.json
 
 # vscode
 .vscode/
+# Cursor IDE
+.cursor/
 
 # JetBrains
 .idea/
+
+# Cursor IDE
+.cursor/

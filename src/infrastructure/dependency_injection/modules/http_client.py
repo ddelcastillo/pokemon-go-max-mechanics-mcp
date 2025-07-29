@@ -1,4 +1,4 @@
-"""HTTP client dependency injection module."""
+from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class HttpClientModule(Module):
     """Module for configuring HTTP client dependencies."""
 
-    def configure(self, binder: "Binder") -> None:
+    def configure(self, binder: Binder) -> None:  # pragma: no cover
         """Configure HTTP client bindings.
 
         Args:
@@ -26,7 +26,7 @@ class HttpClientModule(Module):
 
     @provider
     @singleton
-    def provide_http_client(self) -> HttpClientPort:
+    def provide_http_client(self) -> HttpClientPort:  # pragma: no cover
         """Provide a configured HTTP client instance.
 
         Returns:

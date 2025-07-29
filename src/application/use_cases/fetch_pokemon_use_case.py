@@ -1,5 +1,3 @@
-"""Use case for fetching Pokemon data."""
-
 import threading
 from collections.abc import Callable
 
@@ -79,6 +77,7 @@ class FetchPokemonUseCase:
         try:
             on_started()
             if cancellation_check():
+                on_finished()
                 return
             if (
                 pokemon_data := self._pokemon_data_port.fetch_pokemon_data(pokemon_name=pokemon_name)

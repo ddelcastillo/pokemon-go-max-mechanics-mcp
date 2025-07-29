@@ -1,6 +1,3 @@
-"""Tests for the Pokemon GO API adapter."""
-
-from typing import Any
 from unittest.mock import Mock
 
 from src.domain.ports.outbound.http_client_port import HttpClientPort
@@ -16,7 +13,6 @@ class TestPokemonGoApiAdapter:
     def setup_method(self) -> None:
         """Set up test fixtures."""
         self.mock_http_client = Mock(spec=HttpClientPort)
-        # Mock the context manager behavior
         self.mock_http_client.__enter__ = Mock(return_value=self.mock_http_client)
         self.mock_http_client.__exit__ = Mock(return_value=None)
 
@@ -24,34 +20,27 @@ class TestPokemonGoApiAdapter:
 
     def test_fetch_pokemon_data_success(self) -> None:
         """Test successful Pokemon data fetch from API."""
-        # Mock pokedex response - raw API response
         pokedex_data: PokemonDict = {
             "dexNr": 25,
             "names": {"English": "Pikachu"},
             "stats": {"stamina": 111, "attack": 112, "defense": 96},
         }
 
-        # Configure mock response - single API call
         self.mock_http_client.get.return_value = pokedex_data
 
-        # Call the method
         result = self.adapter.fetch_pokemon_data(pokemon_name="Pikachu")
 
-        # Verify the result - should be the raw API response
         assert result == pokedex_data
         assert result["dexNr"] == 25
         assert result["names"]["English"] == "Pikachu"
         assert result["stats"]["stamina"] == 111
 
-        # Verify only one API call was made
         assert self.mock_http_client.get.call_count == 1
 
     def test_fetch_pokemon_data_not_found(self) -> None:
         """Test Pokemon data fetch when Pokemon is not found."""
-        # Mock HTTP client to raise an exception (Pokemon not found)
         self.mock_http_client.get.side_effect = Exception("HTTP 404: Not Found")
 
-        # Call the method and expect ValueError
         try:
             self.adapter.fetch_pokemon_data(pokemon_name="NonExistentPokemon")
             assert False, "Expected ValueError to be raised"
@@ -60,10 +49,8 @@ class TestPokemonGoApiAdapter:
 
     def test_fetch_pokemon_data_invalid_response(self) -> None:
         """Test Pokemon data fetch with invalid response format."""
-        # Mock invalid response (not a dict)
         self.mock_http_client.get.return_value = "invalid response"
 
-        # Call the method and expect ValueError
         try:
             self.adapter.fetch_pokemon_data(pokemon_name="TestPokemon")
             assert False, "Expected ValueError to be raised"
@@ -72,12 +59,10 @@ class TestPokemonGoApiAdapter:
 
     def test_fetch_pokemon_data_missing_required_fields(self) -> None:
         """Test Pokemon data fetch with missing required fields."""
-        # Mock response missing required fields
-        pokedex_data = {"id": "TEST_POKEMON"}  # Missing dexNr and names
+        pokedex_data = {"id": "TEST_POKEMON"}
 
         self.mock_http_client.get.return_value = pokedex_data
 
-        # Call the method and expect ValueError
         try:
             self.adapter.fetch_pokemon_data(pokemon_name="TestPokemon")
             assert False, "Expected ValueError to be raised"
@@ -86,10 +71,8 @@ class TestPokemonGoApiAdapter:
 
     def test_fetch_pokemon_data_empty_response(self) -> None:
         """Test Pokemon data fetch with empty response."""
-        # Mock empty response
         self.mock_http_client.get.return_value = {}
 
-        # Call the method and expect ValueError
         try:
             self.adapter.fetch_pokemon_data(pokemon_name="TestPokemon")
             assert False, "Expected ValueError to be raised"
@@ -98,26 +81,21 @@ class TestPokemonGoApiAdapter:
 
     def test_fetch_pokemon_data_uppercase_conversion(self) -> None:
         """Test that Pokemon names are converted to uppercase for API calls."""
-        # Mock successful response
         pokedex_data: PokemonDict = {
             "dexNr": 1,
             "names": {"English": "Bulbasaur"},
         }
         self.mock_http_client.get.return_value = pokedex_data
 
-        # Call with lowercase name
         result = self.adapter.fetch_pokemon_data(pokemon_name="bulbasaur")
 
-        # Verify the result
         assert result == pokedex_data
 
-        # Verify the API was called with uppercase name
         expected_url = "https://pokemon-go-api.github.io/pokemon-go-api/api/pokedex/name/BULBASAUR.json"
         self.mock_http_client.get.assert_called_once_with(url=expected_url)
 
     def test_fetch_pokemon_data_complete_response(self) -> None:
         """Test Pokemon data fetch with complete API response."""
-        # Mock complete pokedex response
         pokedex_data: PokemonDict = {
             "dexNr": 150,
             "names": {"English": "Mewtwo", "German": "Mewtu"},
@@ -128,10 +106,8 @@ class TestPokemonGoApiAdapter:
 
         self.mock_http_client.get.return_value = pokedex_data
 
-        # Call the method
         result = self.adapter.fetch_pokemon_data(pokemon_name="Mewtwo")
 
-        # Verify the complete response is returned unchanged
         assert result == pokedex_data
         assert result["dexNr"] == 150
         assert result["names"]["English"] == "Mewtwo"

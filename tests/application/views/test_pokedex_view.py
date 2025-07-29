@@ -1,5 +1,3 @@
-"""Tests for the Pokedex view."""
-
 import unittest
 from typing import Any, Callable
 from unittest.mock import Mock, patch
@@ -236,7 +234,3 @@ class TestPokedexView(unittest.TestCase):
 
         self.assertTrue(self.pokedex_view._base_image_search_cancelled)
         self.assertTrue(self.pokedex_view._shiny_image_search_cancelled)
-
-
-if __name__ == "__main__":
-    unittest.main()

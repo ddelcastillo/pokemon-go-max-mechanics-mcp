@@ -19,7 +19,7 @@ class PokemonDataPort[T](ABC):
     """
 
     @abstractmethod
-    def fetch_pokemon_data(self, *, pokemon_name: str) -> T:
+    def fetch_pokemon_data(self, *, pokemon_name: str) -> T:  # pragma: no cover
         """Fetch Pokemon data by name.
 
         Args:

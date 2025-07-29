@@ -11,7 +11,7 @@ class HttpClientPort(ABC):
     """
 
     @abstractmethod
-    def __enter__(self) -> Self:
+    def __enter__(self) -> Self:  # pragma: no cover
         """Sync context manager entry."""
         pass
 
@@ -23,7 +23,7 @@ class HttpClientPort(ABC):
         pass
 
     @abstractmethod
-    async def __aenter__(self) -> Self:
+    async def __aenter__(self) -> Self:  # pragma: no cover
         """Async context manager entry."""
         pass
 
@@ -42,7 +42,7 @@ class HttpClientPort(ABC):
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         timeout: float | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # pragma: no cover
         """Execute a synchronous GET request to the specified URL.
 
         Args:
@@ -67,7 +67,7 @@ class HttpClientPort(ABC):
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         timeout: float | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # pragma: no cover
         """Execute an asynchronous GET request to the specified URL.
 
         Args:
@@ -92,7 +92,7 @@ class HttpClientPort(ABC):
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         timeout: float | None = None,
-    ) -> bytes:
+    ) -> bytes:  # pragma: no cover
         """Execute a synchronous GET request to download binary data from the specified URL.
 
         Args:

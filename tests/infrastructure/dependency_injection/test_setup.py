@@ -1,4 +1,5 @@
-import pytest
+from typing import cast
+
 from injector import inject
 
 from src.domain.ports.outbound.http_client_port import HttpClientPort
@@ -40,9 +41,7 @@ class TestInjectorSetup:
 
         @inject
         def test_function(*, http_client: HttpClientPort) -> str:
-            # Cast to concrete type to access private attributes
-            from typing import cast
-
+            # Cast to concrete type to access private attributes.
             concrete_client = cast(HttpxClientAdapter, http_client)
             return f"Timeout: {concrete_client._timeout}"
 
