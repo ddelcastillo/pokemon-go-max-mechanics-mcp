@@ -6,7 +6,8 @@ HTTP configuration, and other infrastructure concerns.
 
 from typing import Final
 
-# Pokemon GO API.
+# Github Repo: https://github.com/pokemon-go-api/pokemon-go-api
+# Documentation: https://pokemon-go-api.github.io/pokemon-go-api/
 POKEMON_GO_API_BASE_URL: Final[str] = "https://pokemon-go-api.github.io/pokemon-go-api/api"
 
 # Pokemon GO API keys.
