@@ -15,12 +15,12 @@ class TypeEffectivenessService:
     """
 
     @staticmethod
-    def get_effectiveness_multiplier(*, attacker_type: Type, defender_type: Type) -> float:
+    def get_effectiveness_multiplier(*, attack_type: Type, defender_type: Type) -> float:
         """Calculate the type effectiveness multiplier for an attack.
 
         Args:
-            attacker_type: The type of the attacking move
-            defender_type: The type of the defending Pokemon
+            attack_type: The type of the attacking move.
+            defender_type: The type of the defending Pokemon.
 
         Returns:
             The damage multiplier:
@@ -29,7 +29,7 @@ class TypeEffectivenessService:
             - 0.390625 for no effect attacks
             - 1.0 for normal effectiveness
         """
-        return TYPE_EFFECTIVENESS.get((attacker_type, defender_type), NORMAL_EFFECTIVENESS)
+        return TYPE_EFFECTIVENESS.get((attack_type, defender_type), NORMAL_EFFECTIVENESS)
 
     @staticmethod
     def get_most_effective_types(*, defending_types: list[Type], sorted: bool = True) -> list[tuple[Type, float]]:
@@ -64,7 +64,7 @@ class TypeEffectivenessService:
             combined_multiplier = 1.0
             for defending_type in unique_defending_types:
                 combined_multiplier *= TypeEffectivenessService.get_effectiveness_multiplier(
-                    attacker_type=attacking_type, defender_type=defending_type
+                    attack_type=attacking_type, defender_type=defending_type
                 )
             if combined_multiplier > NORMAL_EFFECTIVENESS:
                 effective_types.append((attacking_type, combined_multiplier))
@@ -98,7 +98,7 @@ class TypeEffectivenessService:
             for defending_type in Type
             if (
                 resistance_multiplier := TypeEffectivenessService.get_effectiveness_multiplier(
-                    attacker_type=attacking_type,
+                    attack_type=attacking_type,
                     defender_type=defending_type,
                 )
             )

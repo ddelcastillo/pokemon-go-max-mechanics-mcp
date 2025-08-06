@@ -28,20 +28,20 @@ class WeatherService:
         return WEATHER_TYPE_BOOSTS[weather]
 
     @staticmethod
-    def is_type_boosted(*, weather: Weather, pokemon_type: Type) -> bool:
+    def is_type_boosted(*, weather: Weather, type_: Type) -> bool:
         """Check if a specific Pokemon type is boosted by the given weather.
 
         Args:
-            weather: The weather condition to check
-            pokemon_type: The Pokemon type to check for boost
+            weather: The weather condition to check.
+            type_: The type to check for boost.
 
         Returns:
             True if the type receives a damage boost under the given weather,
             False otherwise.
 
         Examples:
-            weather=Weather.SUNNY, pokemon_type=Type.FIRE -> True
-            weather=Weather.SUNNY, pokemon_type=Type.WATER -> False
-            weather=Weather.NO_WEATHER, pokemon_type=Type.FIRE -> False
+            weather=Weather.SUNNY, type_=Type.FIRE -> True
+            weather=Weather.SUNNY, type_=Type.WATER -> False
+            weather=Weather.NO_WEATHER, type_=Type.FIRE -> False
         """
-        return pokemon_type in WEATHER_TYPE_BOOSTS[weather]
+        return type_ in WEATHER_TYPE_BOOSTS[weather]

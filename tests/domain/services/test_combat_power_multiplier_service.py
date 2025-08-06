@@ -1,8 +1,6 @@
 import pytest
 
-from src.domain.services.combat_power_multiplier_service import (
-    CombatPowerMultiplierService,
-)
+from src.domain.services.combat_power_multiplier import CombatPowerMultiplierService
 
 
 class TestCombatPowerMultiplierService:

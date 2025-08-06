@@ -1,4 +1,4 @@
-from src.domain.services.stats_service import StatsService
+from src.domain.services.statistics import StatsService
 
 
 class TestStatsService:

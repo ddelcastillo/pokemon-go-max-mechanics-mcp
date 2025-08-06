@@ -8,7 +8,7 @@ from src.domain.constants.type_effectiveness import (
     NOT_VERY_EFFECTIVE,
     SUPER_EFFECTIVE,
 )
-from src.domain.services.type_effectiveness_service import TypeEffectivenessService
+from src.domain.services.type_effectiveness import TypeEffectivenessService
 from src.domain.value_objects.types import Type
 
 
@@ -19,50 +19,46 @@ class TestTypeEffectivenessService:
         """Test getting super effective multipliers."""
         service = TypeEffectivenessService()
 
-        result = service.get_effectiveness_multiplier(attacker_type=Type.WATER, defender_type=Type.FIRE)
+        result = service.get_effectiveness_multiplier(attack_type=Type.WATER, defender_type=Type.FIRE)
         assert result == SUPER_EFFECTIVE
 
     def test_get_effectiveness_multiplier_not_very_effective(self) -> None:
         """Test getting not very effective multipliers."""
         service = TypeEffectivenessService()
 
-        result = service.get_effectiveness_multiplier(attacker_type=Type.FIRE, defender_type=Type.WATER)
+        result = service.get_effectiveness_multiplier(attack_type=Type.FIRE, defender_type=Type.WATER)
         assert result == NOT_VERY_EFFECTIVE
 
     def test_get_effectiveness_multiplier_no_effect(self) -> None:
         """Test getting no effect multipliers."""
         service = TypeEffectivenessService()
 
-        result = service.get_effectiveness_multiplier(attacker_type=Type.NORMAL, defender_type=Type.GHOST)
+        result = service.get_effectiveness_multiplier(attack_type=Type.NORMAL, defender_type=Type.GHOST)
         assert result == NO_EFFECT
 
     def test_get_effectiveness_multiplier_normal_effectiveness(self) -> None:
         """Test getting normal effectiveness for unlisted combinations."""
         service = TypeEffectivenessService()
 
-        result = service.get_effectiveness_multiplier(attacker_type=Type.NORMAL, defender_type=Type.NORMAL)
+        result = service.get_effectiveness_multiplier(attack_type=Type.NORMAL, defender_type=Type.NORMAL)
         assert result == NORMAL_EFFECTIVENESS
 
     def test_static_method_can_be_called_without_instance(self) -> None:
         """Test that the service method can be called statically."""
-        result = TypeEffectivenessService.get_effectiveness_multiplier(
-            attacker_type=Type.WATER, defender_type=Type.FIRE
-        )
+        result = TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.WATER, defender_type=Type.FIRE)
         assert result == SUPER_EFFECTIVE
 
     def test_explicit_arguments_required(self) -> None:
         """Test that explicit keyword arguments are required."""
-        result = TypeEffectivenessService.get_effectiveness_multiplier(
-            attacker_type=Type.WATER, defender_type=Type.FIRE
-        )
+        result = TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.WATER, defender_type=Type.FIRE)
         assert result == SUPER_EFFECTIVE
 
     def test_service_is_stateless(self) -> None:
         """Test that the service is stateless and multiple calls return same result."""
         service = TypeEffectivenessService()
 
-        result1 = service.get_effectiveness_multiplier(attacker_type=Type.FIRE, defender_type=Type.GRASS)
-        result2 = service.get_effectiveness_multiplier(attacker_type=Type.FIRE, defender_type=Type.GRASS)
+        result1 = service.get_effectiveness_multiplier(attack_type=Type.FIRE, defender_type=Type.GRASS)
+        result2 = service.get_effectiveness_multiplier(attack_type=Type.FIRE, defender_type=Type.GRASS)
 
         assert result1 == result2 == SUPER_EFFECTIVE
 

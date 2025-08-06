@@ -1,4 +1,4 @@
-from src.domain.services.weather_service import WeatherService
+from src.domain.services.weather import WeatherService
 from src.domain.value_objects.types import Type
 from src.domain.value_objects.weather import Weather
 
@@ -61,39 +61,39 @@ class TestWeatherService:
 
     def test_is_type_boosted_fire_in_sunny(self) -> None:
         """Test that Fire type is boosted in sunny weather."""
-        result = WeatherService.is_type_boosted(weather=Weather.SUNNY, pokemon_type=Type.FIRE)
+        result = WeatherService.is_type_boosted(weather=Weather.SUNNY, type_=Type.FIRE)
         assert result is True
 
     def test_is_type_boosted_water_in_sunny(self) -> None:
         """Test that Water type is not boosted in sunny weather."""
-        result = WeatherService.is_type_boosted(weather=Weather.SUNNY, pokemon_type=Type.WATER)
+        result = WeatherService.is_type_boosted(weather=Weather.SUNNY, type_=Type.WATER)
         assert result is False
 
     def test_is_type_boosted_water_in_rainy(self) -> None:
         """Test that Water type is boosted in rainy weather."""
-        result = WeatherService.is_type_boosted(weather=Weather.RAINY, pokemon_type=Type.WATER)
+        result = WeatherService.is_type_boosted(weather=Weather.RAINY, type_=Type.WATER)
         assert result is True
 
     def test_is_type_boosted_fire_in_rainy(self) -> None:
         """Test that Fire type is not boosted in rainy weather."""
-        result = WeatherService.is_type_boosted(weather=Weather.RAINY, pokemon_type=Type.FIRE)
+        result = WeatherService.is_type_boosted(weather=Weather.RAINY, type_=Type.FIRE)
         assert result is False
 
     def test_is_type_boosted_all_types_in_no_weather(self) -> None:
         """Test that no type is boosted in no weather."""
         for pokemon_type in Type:
-            result = WeatherService.is_type_boosted(weather=Weather.NO_WEATHER, pokemon_type=pokemon_type)
+            result = WeatherService.is_type_boosted(weather=Weather.NO_WEATHER, type_=pokemon_type)
             assert result is False
 
     def test_is_type_boosted_returns_boolean(self) -> None:
         """Test that is_type_boosted returns a boolean."""
-        result = WeatherService.is_type_boosted(weather=Weather.SUNNY, pokemon_type=Type.FIRE)
+        result = WeatherService.is_type_boosted(weather=Weather.SUNNY, type_=Type.FIRE)
         assert isinstance(result, bool)
 
     def test_static_methods_can_be_called_without_instance(self) -> None:
         """Test that service methods can be called statically."""
         boosted_types = WeatherService.get_boosted_types(weather=Weather.SUNNY)
-        is_boosted = WeatherService.is_type_boosted(weather=Weather.SUNNY, pokemon_type=Type.FIRE)
+        is_boosted = WeatherService.is_type_boosted(weather=Weather.SUNNY, type_=Type.FIRE)
 
         assert len(boosted_types) == 3
         assert is_boosted is True
@@ -101,7 +101,7 @@ class TestWeatherService:
     def test_consistency_between_methods(self) -> None:
         """Test that both methods are consistent with each other."""
         assert all(
-            WeatherService.is_type_boosted(weather=weather, pokemon_type=pokemon_type)
+            WeatherService.is_type_boosted(weather=weather, type_=pokemon_type)
             == (pokemon_type in WeatherService.get_boosted_types(weather=weather))
             for weather in Weather
             for pokemon_type in Type

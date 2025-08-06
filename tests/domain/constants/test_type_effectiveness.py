@@ -5,7 +5,7 @@ from src.domain.constants.type_effectiveness import (
     SUPER_EFFECTIVE,
     TYPE_EFFECTIVENESS,
 )
-from src.domain.services.type_effectiveness_service import TypeEffectivenessService
+from src.domain.services.type_effectiveness import TypeEffectivenessService
 from src.domain.value_objects.types import Type
 
 
@@ -15,33 +15,31 @@ class TestTypeEffectiveness:
     def test_super_effective_examples(self) -> None:
         """Test super effective type matchups return 1.6."""
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.WATER, defender_type=Type.FIRE)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.WATER, defender_type=Type.FIRE)
             == SUPER_EFFECTIVE
         )
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.FIRE, defender_type=Type.GRASS)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.FIRE, defender_type=Type.GRASS)
             == SUPER_EFFECTIVE
         )
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(
-                attacker_type=Type.ELECTRIC, defender_type=Type.WATER
-            )
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.ELECTRIC, defender_type=Type.WATER)
             == SUPER_EFFECTIVE
         )
 
     def test_not_very_effective_examples(self) -> None:
         """Test not very effective type matchups return 0.625."""
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.FIRE, defender_type=Type.WATER)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.FIRE, defender_type=Type.WATER)
             == NOT_VERY_EFFECTIVE
         )
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.WATER, defender_type=Type.GRASS)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.WATER, defender_type=Type.GRASS)
             == NOT_VERY_EFFECTIVE
         )
         assert (
             TypeEffectivenessService.get_effectiveness_multiplier(
-                attacker_type=Type.ELECTRIC, defender_type=Type.ELECTRIC
+                attack_type=Type.ELECTRIC, defender_type=Type.ELECTRIC
             )
             == NOT_VERY_EFFECTIVE
         )
@@ -49,30 +47,26 @@ class TestTypeEffectiveness:
     def test_no_effect_examples(self) -> None:
         """Test no effect type matchups return 0.390625."""
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.NORMAL, defender_type=Type.GHOST)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.NORMAL, defender_type=Type.GHOST)
             == NO_EFFECT
         )
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(
-                attacker_type=Type.ELECTRIC, defender_type=Type.GROUND
-            )
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.ELECTRIC, defender_type=Type.GROUND)
             == NO_EFFECT
         )
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(
-                attacker_type=Type.FIGHTING, defender_type=Type.GHOST
-            )
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.FIGHTING, defender_type=Type.GHOST)
             == NO_EFFECT
         )
 
     def test_normal_effectiveness_default(self) -> None:
         """Test that unlisted combinations return normal effectiveness (1.0)."""
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.NORMAL, defender_type=Type.NORMAL)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.NORMAL, defender_type=Type.NORMAL)
             == NORMAL_EFFECTIVENESS
         )
         assert (
-            TypeEffectivenessService.get_effectiveness_multiplier(attacker_type=Type.ELECTRIC, defender_type=Type.FIRE)
+            TypeEffectivenessService.get_effectiveness_multiplier(attack_type=Type.ELECTRIC, defender_type=Type.FIRE)
             == NORMAL_EFFECTIVENESS
         )
 
